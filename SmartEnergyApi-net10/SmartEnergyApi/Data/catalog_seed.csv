@@ -1,0 +1,644 @@
+# Appliance catalogue. Columns: type,brand,model,rated_watts,source
+# source = typical (class average, NOT from a datasheet) | manufacturer (verified from the maker's spec sheet / nameplate)
+# To add a real model: add a line, set source=manufacturer, restart the API. Existing lines are updated by (type,brand,model).
+# Do not use commas inside fields.
+type,brand,model,rated_watts,source
+refrigerator,Fresh,Single door 250L,130,typical
+refrigerator,Fresh,Top freezer 350L No-Frost,180,typical
+refrigerator,Fresh,Top freezer 450L No-Frost,200,typical
+refrigerator,Fresh,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Fresh,Side-by-side 550L,260,typical
+refrigerator,Toshiba,Single door 250L,130,typical
+refrigerator,Toshiba,Top freezer 350L No-Frost,180,typical
+refrigerator,Toshiba,Top freezer 450L No-Frost,200,typical
+refrigerator,Toshiba,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Toshiba,Side-by-side 550L,260,typical
+refrigerator,Samsung,Single door 250L,130,typical
+refrigerator,Samsung,Top freezer 350L No-Frost,180,typical
+refrigerator,Samsung,Top freezer 450L No-Frost,200,typical
+refrigerator,Samsung,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Samsung,Side-by-side 550L,260,typical
+refrigerator,LG,Single door 250L,130,typical
+refrigerator,LG,Top freezer 350L No-Frost,180,typical
+refrigerator,LG,Top freezer 450L No-Frost,200,typical
+refrigerator,LG,Bottom freezer 400L No-Frost,190,typical
+refrigerator,LG,Side-by-side 550L,260,typical
+refrigerator,Sharp,Single door 250L,130,typical
+refrigerator,Sharp,Top freezer 350L No-Frost,180,typical
+refrigerator,Sharp,Top freezer 450L No-Frost,200,typical
+refrigerator,Sharp,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Sharp,Side-by-side 550L,260,typical
+refrigerator,Unionaire,Single door 250L,130,typical
+refrigerator,Unionaire,Top freezer 350L No-Frost,180,typical
+refrigerator,Unionaire,Top freezer 450L No-Frost,200,typical
+refrigerator,Unionaire,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Unionaire,Side-by-side 550L,260,typical
+refrigerator,Zanussi,Single door 250L,130,typical
+refrigerator,Zanussi,Top freezer 350L No-Frost,180,typical
+refrigerator,Zanussi,Top freezer 450L No-Frost,200,typical
+refrigerator,Zanussi,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Zanussi,Side-by-side 550L,260,typical
+refrigerator,Beko,Single door 250L,130,typical
+refrigerator,Beko,Top freezer 350L No-Frost,180,typical
+refrigerator,Beko,Top freezer 450L No-Frost,200,typical
+refrigerator,Beko,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Beko,Side-by-side 550L,260,typical
+refrigerator,Bosch,Single door 250L,130,typical
+refrigerator,Bosch,Top freezer 350L No-Frost,180,typical
+refrigerator,Bosch,Top freezer 450L No-Frost,200,typical
+refrigerator,Bosch,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Bosch,Side-by-side 550L,260,typical
+refrigerator,Whirlpool,Single door 250L,130,typical
+refrigerator,Whirlpool,Top freezer 350L No-Frost,180,typical
+refrigerator,Whirlpool,Top freezer 450L No-Frost,200,typical
+refrigerator,Whirlpool,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Whirlpool,Side-by-side 550L,260,typical
+refrigerator,Hitachi,Single door 250L,130,typical
+refrigerator,Hitachi,Top freezer 350L No-Frost,180,typical
+refrigerator,Hitachi,Top freezer 450L No-Frost,200,typical
+refrigerator,Hitachi,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Hitachi,Side-by-side 550L,260,typical
+refrigerator,Kiriazi,Single door 250L,130,typical
+refrigerator,Kiriazi,Top freezer 350L No-Frost,180,typical
+refrigerator,Kiriazi,Top freezer 450L No-Frost,200,typical
+refrigerator,Kiriazi,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Kiriazi,Side-by-side 550L,260,typical
+refrigerator,Tornado,Single door 250L,130,typical
+refrigerator,Tornado,Top freezer 350L No-Frost,180,typical
+refrigerator,Tornado,Top freezer 450L No-Frost,200,typical
+refrigerator,Tornado,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Tornado,Side-by-side 550L,260,typical
+refrigerator,Haier,Single door 250L,130,typical
+refrigerator,Haier,Top freezer 350L No-Frost,180,typical
+refrigerator,Haier,Top freezer 450L No-Frost,200,typical
+refrigerator,Haier,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Haier,Side-by-side 550L,260,typical
+refrigerator,Midea,Single door 250L,130,typical
+refrigerator,Midea,Top freezer 350L No-Frost,180,typical
+refrigerator,Midea,Top freezer 450L No-Frost,200,typical
+refrigerator,Midea,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Midea,Side-by-side 550L,260,typical
+refrigerator,Hisense,Single door 250L,130,typical
+refrigerator,Hisense,Top freezer 350L No-Frost,180,typical
+refrigerator,Hisense,Top freezer 450L No-Frost,200,typical
+refrigerator,Hisense,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Hisense,Side-by-side 550L,260,typical
+refrigerator,Electrolux,Single door 250L,130,typical
+refrigerator,Electrolux,Top freezer 350L No-Frost,180,typical
+refrigerator,Electrolux,Top freezer 450L No-Frost,200,typical
+refrigerator,Electrolux,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Electrolux,Side-by-side 550L,260,typical
+refrigerator,Panasonic,Single door 250L,130,typical
+refrigerator,Panasonic,Top freezer 350L No-Frost,180,typical
+refrigerator,Panasonic,Top freezer 450L No-Frost,200,typical
+refrigerator,Panasonic,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Panasonic,Side-by-side 550L,260,typical
+refrigerator,Candy,Single door 250L,130,typical
+refrigerator,Candy,Top freezer 350L No-Frost,180,typical
+refrigerator,Candy,Top freezer 450L No-Frost,200,typical
+refrigerator,Candy,Bottom freezer 400L No-Frost,190,typical
+refrigerator,Candy,Side-by-side 550L,260,typical
+freezer,Fresh,Chest freezer 250L,150,typical
+freezer,Fresh,Upright freezer 5 drawers,180,typical
+freezer,Toshiba,Chest freezer 250L,150,typical
+freezer,Toshiba,Upright freezer 5 drawers,180,typical
+freezer,Unionaire,Chest freezer 250L,150,typical
+freezer,Unionaire,Upright freezer 5 drawers,180,typical
+freezer,Zanussi,Chest freezer 250L,150,typical
+freezer,Zanussi,Upright freezer 5 drawers,180,typical
+freezer,Kiriazi,Chest freezer 250L,150,typical
+freezer,Kiriazi,Upright freezer 5 drawers,180,typical
+freezer,Tornado,Chest freezer 250L,150,typical
+freezer,Tornado,Upright freezer 5 drawers,180,typical
+freezer,Beko,Chest freezer 250L,150,typical
+freezer,Beko,Upright freezer 5 drawers,180,typical
+washing_machine,Fresh,Twin-tub semi-automatic 8kg,400,typical
+washing_machine,Fresh,Top-load automatic 7kg,500,typical
+washing_machine,Fresh,Top-load automatic 10kg,600,typical
+washing_machine,Fresh,Front-load 7kg,2000,typical
+washing_machine,Fresh,Front-load 9kg,2100,typical
+washing_machine,Toshiba,Twin-tub semi-automatic 8kg,400,typical
+washing_machine,Toshiba,Top-load automatic 7kg,500,typical
+washing_machine,Toshiba,Top-load automatic 10kg,600,typical
+washing_machine,Toshiba,Front-load 7kg,2000,typical
+washing_machine,Toshiba,Front-load 9kg,2100,typical
+washing_machine,Samsung,Twin-tub semi-automatic 8kg,400,typical
+washing_machine,Samsung,Top-load automatic 7kg,500,typical
+washing_machine,Samsung,Top-load automatic 10kg,600,typical
+washing_machine,Samsung,Front-load 7kg,2000,typical
+washing_machine,Samsung,Front-load 9kg,2100,typical
+washing_machine,LG,Twin-tub semi-automatic 8kg,400,typical
+washing_machine,LG,Top-load automatic 7kg,500,typical
+washing_machine,LG,Top-load automatic 10kg,600,typical
+washing_machine,LG,Front-load 7kg,2000,typical
+washing_machine,LG,Front-load 9kg,2100,typical
+washing_machine,Sharp,Twin-tub semi-automatic 8kg,400,typical
+washing_machine,Sharp,Top-load automatic 7kg,500,typical
+washing_machine,Sharp,Top-load automatic 10kg,600,typical
+washing_machine,Sharp,Front-load 7kg,2000,typical
+washing_machine,Sharp,Front-load 9kg,2100,typical
+washing_machine,Unionaire,Twin-tub semi-automatic 8kg,400,typical
+washing_machine,Unionaire,Top-load automatic 7kg,500,typical
+washing_machine,Unionaire,Top-load automatic 10kg,600,typical
+washing_machine,Unionaire,Front-load 7kg,2000,typical
+washing_machine,Unionaire,Front-load 9kg,2100,typical
+washing_machine,Zanussi,Twin-tub semi-automatic 8kg,400,typical
+washing_machine,Zanussi,Top-load automatic 7kg,500,typical
+washing_machine,Zanussi,Top-load automatic 10kg,600,typical
+washing_machine,Zanussi,Front-load 7kg,2000,typical
+washing_machine,Zanussi,Front-load 9kg,2100,typical
+washing_machine,Beko,Twin-tub semi-automatic 8kg,400,typical
+washing_machine,Beko,Top-load automatic 7kg,500,typical
+washing_machine,Beko,Top-load automatic 10kg,600,typical
+washing_machine,Beko,Front-load 7kg,2000,typical
+washing_machine,Beko,Front-load 9kg,2100,typical
+washing_machine,Bosch,Twin-tub semi-automatic 8kg,400,typical
+washing_machine,Bosch,Top-load automatic 7kg,500,typical
+washing_machine,Bosch,Top-load automatic 10kg,600,typical
+washing_machine,Bosch,Front-load 7kg,2000,typical
+washing_machine,Bosch,Front-load 9kg,2100,typical
+washing_machine,Whirlpool,Twin-tub semi-automatic 8kg,400,typical
+washing_machine,Whirlpool,Top-load automatic 7kg,500,typical
+washing_machine,Whirlpool,Top-load automatic 10kg,600,typical
+washing_machine,Whirlpool,Front-load 7kg,2000,typical
+washing_machine,Whirlpool,Front-load 9kg,2100,typical
+washing_machine,Haier,Twin-tub semi-automatic 8kg,400,typical
+washing_machine,Haier,Top-load automatic 7kg,500,typical
+washing_machine,Haier,Top-load automatic 10kg,600,typical
+washing_machine,Haier,Front-load 7kg,2000,typical
+washing_machine,Haier,Front-load 9kg,2100,typical
+washing_machine,Midea,Twin-tub semi-automatic 8kg,400,typical
+washing_machine,Midea,Top-load automatic 7kg,500,typical
+washing_machine,Midea,Top-load automatic 10kg,600,typical
+washing_machine,Midea,Front-load 7kg,2000,typical
+washing_machine,Midea,Front-load 9kg,2100,typical
+washing_machine,Candy,Twin-tub semi-automatic 8kg,400,typical
+washing_machine,Candy,Top-load automatic 7kg,500,typical
+washing_machine,Candy,Top-load automatic 10kg,600,typical
+washing_machine,Candy,Front-load 7kg,2000,typical
+washing_machine,Candy,Front-load 9kg,2100,typical
+washing_machine,Ariston,Twin-tub semi-automatic 8kg,400,typical
+washing_machine,Ariston,Top-load automatic 7kg,500,typical
+washing_machine,Ariston,Top-load automatic 10kg,600,typical
+washing_machine,Ariston,Front-load 7kg,2000,typical
+washing_machine,Ariston,Front-load 9kg,2100,typical
+washing_machine,Panasonic,Twin-tub semi-automatic 8kg,400,typical
+washing_machine,Panasonic,Top-load automatic 7kg,500,typical
+washing_machine,Panasonic,Top-load automatic 10kg,600,typical
+washing_machine,Panasonic,Front-load 7kg,2000,typical
+washing_machine,Panasonic,Front-load 9kg,2100,typical
+washing_machine,Hitachi,Twin-tub semi-automatic 8kg,400,typical
+washing_machine,Hitachi,Top-load automatic 7kg,500,typical
+washing_machine,Hitachi,Top-load automatic 10kg,600,typical
+washing_machine,Hitachi,Front-load 7kg,2000,typical
+washing_machine,Hitachi,Front-load 9kg,2100,typical
+air_conditioner,Carrier,1.0 HP split,900,typical
+air_conditioner,Carrier,1.5 HP split,1300,typical
+air_conditioner,Carrier,1.5 HP inverter,1100,typical
+air_conditioner,Carrier,2.25 HP split,1950,typical
+air_conditioner,Carrier,3.0 HP split,2600,typical
+air_conditioner,Sharp,1.0 HP split,900,typical
+air_conditioner,Sharp,1.5 HP split,1300,typical
+air_conditioner,Sharp,1.5 HP inverter,1100,typical
+air_conditioner,Sharp,2.25 HP split,1950,typical
+air_conditioner,Sharp,3.0 HP split,2600,typical
+air_conditioner,Fresh,1.0 HP split,900,typical
+air_conditioner,Fresh,1.5 HP split,1300,typical
+air_conditioner,Fresh,1.5 HP inverter,1100,typical
+air_conditioner,Fresh,2.25 HP split,1950,typical
+air_conditioner,Fresh,3.0 HP split,2600,typical
+air_conditioner,Tornado,1.0 HP split,900,typical
+air_conditioner,Tornado,1.5 HP split,1300,typical
+air_conditioner,Tornado,1.5 HP inverter,1100,typical
+air_conditioner,Tornado,2.25 HP split,1950,typical
+air_conditioner,Tornado,3.0 HP split,2600,typical
+air_conditioner,Midea,1.0 HP split,900,typical
+air_conditioner,Midea,1.5 HP split,1300,typical
+air_conditioner,Midea,1.5 HP inverter,1100,typical
+air_conditioner,Midea,2.25 HP split,1950,typical
+air_conditioner,Midea,3.0 HP split,2600,typical
+air_conditioner,LG,1.0 HP split,900,typical
+air_conditioner,LG,1.5 HP split,1300,typical
+air_conditioner,LG,1.5 HP inverter,1100,typical
+air_conditioner,LG,2.25 HP split,1950,typical
+air_conditioner,LG,3.0 HP split,2600,typical
+air_conditioner,Samsung,1.0 HP split,900,typical
+air_conditioner,Samsung,1.5 HP split,1300,typical
+air_conditioner,Samsung,1.5 HP inverter,1100,typical
+air_conditioner,Samsung,2.25 HP split,1950,typical
+air_conditioner,Samsung,3.0 HP split,2600,typical
+air_conditioner,Toshiba,1.0 HP split,900,typical
+air_conditioner,Toshiba,1.5 HP split,1300,typical
+air_conditioner,Toshiba,1.5 HP inverter,1100,typical
+air_conditioner,Toshiba,2.25 HP split,1950,typical
+air_conditioner,Toshiba,3.0 HP split,2600,typical
+air_conditioner,Gree,1.0 HP split,900,typical
+air_conditioner,Gree,1.5 HP split,1300,typical
+air_conditioner,Gree,1.5 HP inverter,1100,typical
+air_conditioner,Gree,2.25 HP split,1950,typical
+air_conditioner,Gree,3.0 HP split,2600,typical
+air_conditioner,Haier,1.0 HP split,900,typical
+air_conditioner,Haier,1.5 HP split,1300,typical
+air_conditioner,Haier,1.5 HP inverter,1100,typical
+air_conditioner,Haier,2.25 HP split,1950,typical
+air_conditioner,Haier,3.0 HP split,2600,typical
+air_conditioner,Hisense,1.0 HP split,900,typical
+air_conditioner,Hisense,1.5 HP split,1300,typical
+air_conditioner,Hisense,1.5 HP inverter,1100,typical
+air_conditioner,Hisense,2.25 HP split,1950,typical
+air_conditioner,Hisense,3.0 HP split,2600,typical
+air_conditioner,Unionaire,1.0 HP split,900,typical
+air_conditioner,Unionaire,1.5 HP split,1300,typical
+air_conditioner,Unionaire,1.5 HP inverter,1100,typical
+air_conditioner,Unionaire,2.25 HP split,1950,typical
+air_conditioner,Unionaire,3.0 HP split,2600,typical
+air_conditioner,Panasonic,1.0 HP split,900,typical
+air_conditioner,Panasonic,1.5 HP split,1300,typical
+air_conditioner,Panasonic,1.5 HP inverter,1100,typical
+air_conditioner,Panasonic,2.25 HP split,1950,typical
+air_conditioner,Panasonic,3.0 HP split,2600,typical
+air_conditioner,Daikin,1.0 HP split,900,typical
+air_conditioner,Daikin,1.5 HP split,1300,typical
+air_conditioner,Daikin,1.5 HP inverter,1100,typical
+air_conditioner,Daikin,2.25 HP split,1950,typical
+air_conditioner,Daikin,3.0 HP split,2600,typical
+air_conditioner,TCL,1.0 HP split,900,typical
+air_conditioner,TCL,1.5 HP split,1300,typical
+air_conditioner,TCL,1.5 HP inverter,1100,typical
+air_conditioner,TCL,2.25 HP split,1950,typical
+air_conditioner,TCL,3.0 HP split,2600,typical
+tv,Samsung,32 inch LED,50,typical
+tv,Samsung,43 inch LED,80,typical
+tv,Samsung,50 inch 4K,110,typical
+tv,Samsung,55 inch 4K,130,typical
+tv,Samsung,65 inch 4K,180,typical
+tv,Samsung,75 inch 4K,250,typical
+tv,LG,32 inch LED,50,typical
+tv,LG,43 inch LED,80,typical
+tv,LG,50 inch 4K,110,typical
+tv,LG,55 inch 4K,130,typical
+tv,LG,65 inch 4K,180,typical
+tv,LG,75 inch 4K,250,typical
+tv,Sony,32 inch LED,50,typical
+tv,Sony,43 inch LED,80,typical
+tv,Sony,50 inch 4K,110,typical
+tv,Sony,55 inch 4K,130,typical
+tv,Sony,65 inch 4K,180,typical
+tv,Sony,75 inch 4K,250,typical
+tv,Toshiba,32 inch LED,50,typical
+tv,Toshiba,43 inch LED,80,typical
+tv,Toshiba,50 inch 4K,110,typical
+tv,Toshiba,55 inch 4K,130,typical
+tv,Toshiba,65 inch 4K,180,typical
+tv,Toshiba,75 inch 4K,250,typical
+tv,Sharp,32 inch LED,50,typical
+tv,Sharp,43 inch LED,80,typical
+tv,Sharp,50 inch 4K,110,typical
+tv,Sharp,55 inch 4K,130,typical
+tv,Sharp,65 inch 4K,180,typical
+tv,Sharp,75 inch 4K,250,typical
+tv,Hisense,32 inch LED,50,typical
+tv,Hisense,43 inch LED,80,typical
+tv,Hisense,50 inch 4K,110,typical
+tv,Hisense,55 inch 4K,130,typical
+tv,Hisense,65 inch 4K,180,typical
+tv,Hisense,75 inch 4K,250,typical
+tv,TCL,32 inch LED,50,typical
+tv,TCL,43 inch LED,80,typical
+tv,TCL,50 inch 4K,110,typical
+tv,TCL,55 inch 4K,130,typical
+tv,TCL,65 inch 4K,180,typical
+tv,TCL,75 inch 4K,250,typical
+tv,Xiaomi,32 inch LED,50,typical
+tv,Xiaomi,43 inch LED,80,typical
+tv,Xiaomi,50 inch 4K,110,typical
+tv,Xiaomi,55 inch 4K,130,typical
+tv,Xiaomi,65 inch 4K,180,typical
+tv,Xiaomi,75 inch 4K,250,typical
+tv,Panasonic,32 inch LED,50,typical
+tv,Panasonic,43 inch LED,80,typical
+tv,Panasonic,50 inch 4K,110,typical
+tv,Panasonic,55 inch 4K,130,typical
+tv,Panasonic,65 inch 4K,180,typical
+tv,Panasonic,75 inch 4K,250,typical
+tv,Philips,32 inch LED,50,typical
+tv,Philips,43 inch LED,80,typical
+tv,Philips,50 inch 4K,110,typical
+tv,Philips,55 inch 4K,130,typical
+tv,Philips,65 inch 4K,180,typical
+tv,Philips,75 inch 4K,250,typical
+tv,Tornado,32 inch LED,50,typical
+tv,Tornado,43 inch LED,80,typical
+tv,Tornado,50 inch 4K,110,typical
+tv,Tornado,55 inch 4K,130,typical
+tv,Tornado,65 inch 4K,180,typical
+tv,Tornado,75 inch 4K,250,typical
+tv,Haier,32 inch LED,50,typical
+tv,Haier,43 inch LED,80,typical
+tv,Haier,50 inch 4K,110,typical
+tv,Haier,55 inch 4K,130,typical
+tv,Haier,65 inch 4K,180,typical
+tv,Haier,75 inch 4K,250,typical
+blender,Moulinex,Personal blender 300W,300,typical
+blender,Moulinex,Blender 500W,500,typical
+blender,Moulinex,Blender 700W,700,typical
+blender,Moulinex,Blender 1000W,1000,typical
+blender,Moulinex,Hand blender 600W,600,typical
+blender,Braun,Personal blender 300W,300,typical
+blender,Braun,Blender 500W,500,typical
+blender,Braun,Blender 700W,700,typical
+blender,Braun,Blender 1000W,1000,typical
+blender,Braun,Hand blender 600W,600,typical
+blender,Philips,Personal blender 300W,300,typical
+blender,Philips,Blender 500W,500,typical
+blender,Philips,Blender 700W,700,typical
+blender,Philips,Blender 1000W,1000,typical
+blender,Philips,Hand blender 600W,600,typical
+blender,Tefal,Personal blender 300W,300,typical
+blender,Tefal,Blender 500W,500,typical
+blender,Tefal,Blender 700W,700,typical
+blender,Tefal,Blender 1000W,1000,typical
+blender,Tefal,Hand blender 600W,600,typical
+blender,Black+Decker,Personal blender 300W,300,typical
+blender,Black+Decker,Blender 500W,500,typical
+blender,Black+Decker,Blender 700W,700,typical
+blender,Black+Decker,Blender 1000W,1000,typical
+blender,Black+Decker,Hand blender 600W,600,typical
+blender,Kenwood,Personal blender 300W,300,typical
+blender,Kenwood,Blender 500W,500,typical
+blender,Kenwood,Blender 700W,700,typical
+blender,Kenwood,Blender 1000W,1000,typical
+blender,Kenwood,Hand blender 600W,600,typical
+blender,Panasonic,Personal blender 300W,300,typical
+blender,Panasonic,Blender 500W,500,typical
+blender,Panasonic,Blender 700W,700,typical
+blender,Panasonic,Blender 1000W,1000,typical
+blender,Panasonic,Hand blender 600W,600,typical
+blender,Tornado,Personal blender 300W,300,typical
+blender,Tornado,Blender 500W,500,typical
+blender,Tornado,Blender 700W,700,typical
+blender,Tornado,Blender 1000W,1000,typical
+blender,Tornado,Hand blender 600W,600,typical
+blender,Kiriazi,Personal blender 300W,300,typical
+blender,Kiriazi,Blender 500W,500,typical
+blender,Kiriazi,Blender 700W,700,typical
+blender,Kiriazi,Blender 1000W,1000,typical
+blender,Kiriazi,Hand blender 600W,600,typical
+blender,Bosch,Personal blender 300W,300,typical
+blender,Bosch,Blender 500W,500,typical
+blender,Bosch,Blender 700W,700,typical
+blender,Bosch,Blender 1000W,1000,typical
+blender,Bosch,Hand blender 600W,600,typical
+blender,Oster,Personal blender 300W,300,typical
+blender,Oster,Blender 500W,500,typical
+blender,Oster,Blender 700W,700,typical
+blender,Oster,Blender 1000W,1000,typical
+blender,Oster,Hand blender 600W,600,typical
+microwave,Samsung,20L solo,1200,typical
+microwave,Samsung,25L with grill,1500,typical
+microwave,Samsung,30L with grill,1600,typical
+microwave,LG,20L solo,1200,typical
+microwave,LG,25L with grill,1500,typical
+microwave,LG,30L with grill,1600,typical
+microwave,Sharp,20L solo,1200,typical
+microwave,Sharp,25L with grill,1500,typical
+microwave,Sharp,30L with grill,1600,typical
+microwave,Toshiba,20L solo,1200,typical
+microwave,Toshiba,25L with grill,1500,typical
+microwave,Toshiba,30L with grill,1600,typical
+microwave,Panasonic,20L solo,1200,typical
+microwave,Panasonic,25L with grill,1500,typical
+microwave,Panasonic,30L with grill,1600,typical
+microwave,Fresh,20L solo,1200,typical
+microwave,Fresh,25L with grill,1500,typical
+microwave,Fresh,30L with grill,1600,typical
+microwave,Tornado,20L solo,1200,typical
+microwave,Tornado,25L with grill,1500,typical
+microwave,Tornado,30L with grill,1600,typical
+microwave,Kiriazi,20L solo,1200,typical
+microwave,Kiriazi,25L with grill,1500,typical
+microwave,Kiriazi,30L with grill,1600,typical
+microwave,Midea,20L solo,1200,typical
+microwave,Midea,25L with grill,1500,typical
+microwave,Midea,30L with grill,1600,typical
+microwave,Black+Decker,20L solo,1200,typical
+microwave,Black+Decker,25L with grill,1500,typical
+microwave,Black+Decker,30L with grill,1600,typical
+microwave,Zanussi,20L solo,1200,typical
+microwave,Zanussi,25L with grill,1500,typical
+microwave,Zanussi,30L with grill,1600,typical
+microwave,Bosch,20L solo,1200,typical
+microwave,Bosch,25L with grill,1500,typical
+microwave,Bosch,30L with grill,1600,typical
+microwave,Beko,20L solo,1200,typical
+microwave,Beko,25L with grill,1500,typical
+microwave,Beko,30L with grill,1600,typical
+water_heater,Ariston,30L electric,1500,typical
+water_heater,Ariston,50L electric,1800,typical
+water_heater,Ariston,80L electric,2000,typical
+water_heater,Fresh,30L electric,1500,typical
+water_heater,Fresh,50L electric,1800,typical
+water_heater,Fresh,80L electric,2000,typical
+water_heater,Toshiba,30L electric,1500,typical
+water_heater,Toshiba,50L electric,1800,typical
+water_heater,Toshiba,80L electric,2000,typical
+water_heater,Zanussi,30L electric,1500,typical
+water_heater,Zanussi,50L electric,1800,typical
+water_heater,Zanussi,80L electric,2000,typical
+water_heater,Unionaire,30L electric,1500,typical
+water_heater,Unionaire,50L electric,1800,typical
+water_heater,Unionaire,80L electric,2000,typical
+water_heater,Tornado,30L electric,1500,typical
+water_heater,Tornado,50L electric,1800,typical
+water_heater,Tornado,80L electric,2000,typical
+water_heater,Kiriazi,30L electric,1500,typical
+water_heater,Kiriazi,50L electric,1800,typical
+water_heater,Kiriazi,80L electric,2000,typical
+water_heater,Bosch,30L electric,1500,typical
+water_heater,Bosch,50L electric,1800,typical
+water_heater,Bosch,80L electric,2000,typical
+water_heater,Electrolux,30L electric,1500,typical
+water_heater,Electrolux,50L electric,1800,typical
+water_heater,Electrolux,80L electric,2000,typical
+dishwasher,Bosch,12 place settings,1800,typical
+dishwasher,Bosch,14 place settings,1950,typical
+dishwasher,Siemens,12 place settings,1800,typical
+dishwasher,Siemens,14 place settings,1950,typical
+dishwasher,Beko,12 place settings,1800,typical
+dishwasher,Beko,14 place settings,1950,typical
+dishwasher,Zanussi,12 place settings,1800,typical
+dishwasher,Zanussi,14 place settings,1950,typical
+dishwasher,Samsung,12 place settings,1800,typical
+dishwasher,Samsung,14 place settings,1950,typical
+dishwasher,LG,12 place settings,1800,typical
+dishwasher,LG,14 place settings,1950,typical
+dishwasher,Whirlpool,12 place settings,1800,typical
+dishwasher,Whirlpool,14 place settings,1950,typical
+dishwasher,Fresh,12 place settings,1800,typical
+dishwasher,Fresh,14 place settings,1950,typical
+dishwasher,Candy,12 place settings,1800,typical
+dishwasher,Candy,14 place settings,1950,typical
+dishwasher,Midea,12 place settings,1800,typical
+dishwasher,Midea,14 place settings,1950,typical
+dishwasher,Ariston,12 place settings,1800,typical
+dishwasher,Ariston,14 place settings,1950,typical
+dishwasher,Electrolux,12 place settings,1800,typical
+dishwasher,Electrolux,14 place settings,1950,typical
+fan,Kiriazi,Table fan,45,typical
+fan,Kiriazi,Tower fan,55,typical
+fan,Kiriazi,Stand fan 16 inch,60,typical
+fan,Kiriazi,Ceiling fan,75,typical
+fan,Tornado,Table fan,45,typical
+fan,Tornado,Tower fan,55,typical
+fan,Tornado,Stand fan 16 inch,60,typical
+fan,Tornado,Ceiling fan,75,typical
+fan,Fresh,Table fan,45,typical
+fan,Fresh,Tower fan,55,typical
+fan,Fresh,Stand fan 16 inch,60,typical
+fan,Fresh,Ceiling fan,75,typical
+fan,Toshiba,Table fan,45,typical
+fan,Toshiba,Tower fan,55,typical
+fan,Toshiba,Stand fan 16 inch,60,typical
+fan,Toshiba,Ceiling fan,75,typical
+fan,Panasonic,Table fan,45,typical
+fan,Panasonic,Tower fan,55,typical
+fan,Panasonic,Stand fan 16 inch,60,typical
+fan,Panasonic,Ceiling fan,75,typical
+fan,Midea,Table fan,45,typical
+fan,Midea,Tower fan,55,typical
+fan,Midea,Stand fan 16 inch,60,typical
+fan,Midea,Ceiling fan,75,typical
+fan,Xiaomi,Table fan,45,typical
+fan,Xiaomi,Tower fan,55,typical
+fan,Xiaomi,Stand fan 16 inch,60,typical
+fan,Xiaomi,Ceiling fan,75,typical
+iron,Philips,Dry iron,1200,typical
+iron,Philips,Steam iron 2000W,2000,typical
+iron,Philips,Steam iron 2400W,2400,typical
+iron,Tefal,Dry iron,1200,typical
+iron,Tefal,Steam iron 2000W,2000,typical
+iron,Tefal,Steam iron 2400W,2400,typical
+iron,Braun,Dry iron,1200,typical
+iron,Braun,Steam iron 2000W,2000,typical
+iron,Braun,Steam iron 2400W,2400,typical
+iron,Black+Decker,Dry iron,1200,typical
+iron,Black+Decker,Steam iron 2000W,2000,typical
+iron,Black+Decker,Steam iron 2400W,2400,typical
+iron,Panasonic,Dry iron,1200,typical
+iron,Panasonic,Steam iron 2000W,2000,typical
+iron,Panasonic,Steam iron 2400W,2400,typical
+iron,Bosch,Dry iron,1200,typical
+iron,Bosch,Steam iron 2000W,2000,typical
+iron,Bosch,Steam iron 2400W,2400,typical
+iron,Tornado,Dry iron,1200,typical
+iron,Tornado,Steam iron 2000W,2000,typical
+iron,Tornado,Steam iron 2400W,2400,typical
+iron,Kenwood,Dry iron,1200,typical
+iron,Kenwood,Steam iron 2000W,2000,typical
+iron,Kenwood,Steam iron 2400W,2400,typical
+iron,Russell Hobbs,Dry iron,1200,typical
+iron,Russell Hobbs,Steam iron 2000W,2000,typical
+iron,Russell Hobbs,Steam iron 2400W,2400,typical
+vacuum,Samsung,Vacuum cleaner 1400W,1400,typical
+vacuum,Samsung,Vacuum cleaner 1800W,1800,typical
+vacuum,Samsung,Vacuum cleaner 2000W,2000,typical
+vacuum,LG,Vacuum cleaner 1400W,1400,typical
+vacuum,LG,Vacuum cleaner 1800W,1800,typical
+vacuum,LG,Vacuum cleaner 2000W,2000,typical
+vacuum,Philips,Vacuum cleaner 1400W,1400,typical
+vacuum,Philips,Vacuum cleaner 1800W,1800,typical
+vacuum,Philips,Vacuum cleaner 2000W,2000,typical
+vacuum,Bosch,Vacuum cleaner 1400W,1400,typical
+vacuum,Bosch,Vacuum cleaner 1800W,1800,typical
+vacuum,Bosch,Vacuum cleaner 2000W,2000,typical
+vacuum,Hoover,Vacuum cleaner 1400W,1400,typical
+vacuum,Hoover,Vacuum cleaner 1800W,1800,typical
+vacuum,Hoover,Vacuum cleaner 2000W,2000,typical
+vacuum,Electrolux,Vacuum cleaner 1400W,1400,typical
+vacuum,Electrolux,Vacuum cleaner 1800W,1800,typical
+vacuum,Electrolux,Vacuum cleaner 2000W,2000,typical
+vacuum,Black+Decker,Vacuum cleaner 1400W,1400,typical
+vacuum,Black+Decker,Vacuum cleaner 1800W,1800,typical
+vacuum,Black+Decker,Vacuum cleaner 2000W,2000,typical
+vacuum,Panasonic,Vacuum cleaner 1400W,1400,typical
+vacuum,Panasonic,Vacuum cleaner 1800W,1800,typical
+vacuum,Panasonic,Vacuum cleaner 2000W,2000,typical
+vacuum,Tornado,Vacuum cleaner 1400W,1400,typical
+vacuum,Tornado,Vacuum cleaner 1800W,1800,typical
+vacuum,Tornado,Vacuum cleaner 2000W,2000,typical
+vacuum,Dyson,Vacuum cleaner 1400W,1400,typical
+vacuum,Dyson,Vacuum cleaner 1800W,1800,typical
+vacuum,Dyson,Vacuum cleaner 2000W,2000,typical
+vacuum,Xiaomi,Vacuum cleaner 1400W,1400,typical
+vacuum,Xiaomi,Vacuum cleaner 1800W,1800,typical
+vacuum,Xiaomi,Vacuum cleaner 2000W,2000,typical
+kettle,Philips,Kettle 1.0L,1500,typical
+kettle,Philips,Kettle 1.7L,2200,typical
+kettle,Tefal,Kettle 1.0L,1500,typical
+kettle,Tefal,Kettle 1.7L,2200,typical
+kettle,Braun,Kettle 1.0L,1500,typical
+kettle,Braun,Kettle 1.7L,2200,typical
+kettle,Black+Decker,Kettle 1.0L,1500,typical
+kettle,Black+Decker,Kettle 1.7L,2200,typical
+kettle,Kenwood,Kettle 1.0L,1500,typical
+kettle,Kenwood,Kettle 1.7L,2200,typical
+kettle,Tornado,Kettle 1.0L,1500,typical
+kettle,Tornado,Kettle 1.7L,2200,typical
+kettle,Moulinex,Kettle 1.0L,1500,typical
+kettle,Moulinex,Kettle 1.7L,2200,typical
+kettle,Bosch,Kettle 1.0L,1500,typical
+kettle,Bosch,Kettle 1.7L,2200,typical
+kettle,Kiriazi,Kettle 1.0L,1500,typical
+kettle,Kiriazi,Kettle 1.7L,2200,typical
+kettle,Russell Hobbs,Kettle 1.0L,1500,typical
+kettle,Russell Hobbs,Kettle 1.7L,2200,typical
+kettle,Panasonic,Kettle 1.0L,1500,typical
+kettle,Panasonic,Kettle 1.7L,2200,typical
+toaster,Philips,2-slice toaster,800,typical
+toaster,Philips,4-slice toaster,1400,typical
+toaster,Tefal,2-slice toaster,800,typical
+toaster,Tefal,4-slice toaster,1400,typical
+toaster,Braun,2-slice toaster,800,typical
+toaster,Braun,4-slice toaster,1400,typical
+toaster,Black+Decker,2-slice toaster,800,typical
+toaster,Black+Decker,4-slice toaster,1400,typical
+toaster,Kenwood,2-slice toaster,800,typical
+toaster,Kenwood,4-slice toaster,1400,typical
+toaster,Tornado,2-slice toaster,800,typical
+toaster,Tornado,4-slice toaster,1400,typical
+toaster,Moulinex,2-slice toaster,800,typical
+toaster,Moulinex,4-slice toaster,1400,typical
+toaster,Bosch,2-slice toaster,800,typical
+toaster,Bosch,4-slice toaster,1400,typical
+toaster,Kiriazi,2-slice toaster,800,typical
+toaster,Kiriazi,4-slice toaster,1400,typical
+toaster,Russell Hobbs,2-slice toaster,800,typical
+toaster,Russell Hobbs,4-slice toaster,1400,typical
+computer,Dell,Laptop (office),65,typical
+computer,Dell,Gaming laptop,180,typical
+computer,Dell,Desktop PC,300,typical
+computer,Dell,Monitor 24 inch,30,typical
+computer,HP,Laptop (office),65,typical
+computer,HP,Gaming laptop,180,typical
+computer,HP,Desktop PC,300,typical
+computer,HP,Monitor 24 inch,30,typical
+computer,Lenovo,Laptop (office),65,typical
+computer,Lenovo,Gaming laptop,180,typical
+computer,Lenovo,Desktop PC,300,typical
+computer,Lenovo,Monitor 24 inch,30,typical
+computer,Asus,Laptop (office),65,typical
+computer,Asus,Gaming laptop,180,typical
+computer,Asus,Desktop PC,300,typical
+computer,Asus,Monitor 24 inch,30,typical
+computer,Apple,Laptop (office),65,typical
+computer,Apple,Gaming laptop,180,typical
+computer,Apple,Desktop PC,300,typical
+computer,Apple,Monitor 24 inch,30,typical
+computer,Acer,Laptop (office),65,typical
+computer,Acer,Gaming laptop,180,typical
+computer,Acer,Desktop PC,300,typical
+computer,Acer,Monitor 24 inch,30,typical
+computer,MSI,Laptop (office),65,typical
+computer,MSI,Gaming laptop,180,typical
+computer,MSI,Desktop PC,300,typical
+computer,MSI,Monitor 24 inch,30,typical
