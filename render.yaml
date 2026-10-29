@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: smart-energy-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./SmartEnergyApi-net10/SmartEnergyApi/Dockerfile
+    dockerContext: ./SmartEnergyApi-net10/SmartEnergyApi
+    healthCheckPath: /health
+    envVars:
+      - key: Jwt__Secret
+        generateValue: true

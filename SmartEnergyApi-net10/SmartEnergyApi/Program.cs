@@ -83,17 +83,16 @@ using (var scope = app.Services.CreateScope())
 }
 
 // 5. Configure Middleware Pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Swagger stays on in every environment so the hosted API can be demoed/tested.
+app.UseSwagger();
+app.UseSwaggerUI();
 
-app.UseHttpsRedirection();
+// HTTPS is terminated by the hosting platform (Render), so no HTTPS redirection here.
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapGet("/health", () => Results.Ok("ok"));
 app.MapControllers();
 
 app.Run();

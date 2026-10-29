@@ -19,7 +19,11 @@ class Api {
 
   // Chrome / desktop reach the backend on localhost; the Android emulator reaches the host
   // through 10.0.2.2. Change from Profile > Server for a real phone (use the PC's LAN IP).
-  static String get defaultBaseUrl => kIsWeb ? 'http://localhost:4000/api' : 'http://10.0.2.2:4000/api';
+  // Set at build time with --dart-define=API_URL=https://your-server/api (used by the GitHub workflow).
+  static const String _envUrl = String.fromEnvironment('API_URL');
+  static String get defaultBaseUrl => _envUrl.isNotEmpty
+      ? _envUrl
+      : (kIsWeb ? 'http://localhost:4000/api' : 'http://10.0.2.2:4000/api');
 
   String baseUrl = defaultBaseUrl;
   String? token;
