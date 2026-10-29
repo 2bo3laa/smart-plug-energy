@@ -23,7 +23,7 @@ class Api {
   static const String _envUrl = String.fromEnvironment('API_URL');
   static String get defaultBaseUrl => _envUrl.isNotEmpty
       ? _envUrl
-      : (kIsWeb ? 'http://localhost:4000/api' : 'http://10.0.2.2:4000/api');
+      : (kIsWeb ? 'http://localhost:4000/api' : 'http://smart-plug.runasp.net/api');
 
   String baseUrl = defaultBaseUrl;
   String? token;
