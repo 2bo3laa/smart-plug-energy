@@ -87,7 +87,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
                             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Text('${l.total}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
                               const SizedBox(height: 2),
-                              Text('Total Devices · ${l.online} Online, ${l.offline} Offline', style: const TextStyle(fontSize: 11.5, color: C.text2)),
+                              Text('Total Devices · ${l.devices.where((x) => x.showsOnline).length} Online, ${l.devices.where((x) => !x.showsOnline).length} Offline', style: const TextStyle(fontSize: 11.5, color: C.text2)),
                             ]),
                           ]),
                         ),
@@ -115,7 +115,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
               const SizedBox(height: 1),
               Text(d.brand == null ? d.room : '${d.room} · ${d.brand}', style: const TextStyle(fontSize: 11, color: C.text3)),
               const SizedBox(height: 2),
-              Text(d.isOnline ? 'Online' : 'Offline', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: d.isOnline ? C.green : C.red)),
+              Text(d.showsOnline ? 'Online' : 'Offline', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: d.showsOnline ? C.green : C.red)),
             ]),
           ),
           if (d.brand != null) Padding(padding: const EdgeInsets.only(right: 10), child: BrandLogo(d.brand!, size: 30)),

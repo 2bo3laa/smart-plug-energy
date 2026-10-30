@@ -20,6 +20,9 @@ class Device {
   final double voltage, current, power, powerFactor, todayKwh, todayCost;
   final double? ratedWatts;
   final String? type, brand, model;
+  /// What the app shows as "Online": connected AND switched on. A switched-off plug shows as Offline,
+  /// but `isOnline` (connected) still decides whether the toggle can be used to turn it back on.
+  bool get showsOnline => isOnline && isOn;
   Device({
     this.ratedWatts, this.type, this.brand, this.model,
     required this.id, required this.name, required this.room, required this.isOnline,

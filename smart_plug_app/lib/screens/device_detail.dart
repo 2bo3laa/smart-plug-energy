@@ -199,7 +199,7 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
                               child: const Row(children: [
                                 Icon(Icons.wifi_off_rounded, size: 16, color: C.red),
                                 SizedBox(width: 8),
-                                Expanded(child: Text('Device is offline. Commands will be delivered when it reconnects.', style: TextStyle(fontSize: 11.5, color: C.red))),
+                                Expanded(child: Text('Device is not connected. Check its power and Wi-Fi.', style: TextStyle(fontSize: 11.5, color: C.red))),
                               ]),
                             ),
                           GridView.count(

@@ -1,0 +1,9 @@
+{
+  "name": "TaskDrive Screens",
+  "id": "taskdrive-screens-0001",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": { "allowedDomains": ["none"] }
+}

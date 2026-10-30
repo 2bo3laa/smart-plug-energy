@@ -122,7 +122,8 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
     final d = devices[_sel.clamp(0, devices.length - 1)];
-    final dead = !d.isOnline;
+    final dead = !d.isOnline;            // not connected: toggle disabled
+    final shownOff = !d.showsOnline;     // not connected OR switched off: shown as Offline
     return RefreshIndicator(
       color: C.blue,
       backgroundColor: C.card,
@@ -147,9 +148,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(d.name, style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700)),
             const SizedBox(height: 3),
             Row(children: [
-              Container(width: 6, height: 6, decoration: BoxDecoration(shape: BoxShape.circle, color: dead ? C.red : C.green)),
+              Container(width: 6, height: 6, decoration: BoxDecoration(shape: BoxShape.circle, color: shownOff ? C.red : C.green)),
               const SizedBox(width: 5),
-              Text(dead ? 'Offline' : 'Online', style: TextStyle(fontSize: 11.5, color: dead ? C.red : C.green)),
+              Text(shownOff ? 'Offline' : 'Online', style: TextStyle(fontSize: 11.5, color: shownOff ? C.red : C.green)),
               const SizedBox(width: 8),
               Text(d.room, style: const TextStyle(fontSize: 11.5, color: C.text3)),
             ]),
