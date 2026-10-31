@@ -4,6 +4,7 @@ using SmartEnergyApi.Data;
 namespace SmartEnergyApi.Services;
 
 public record TierInfo(double CurrentPrice, double? NextPrice, double? KwhUntilNext);
+public record TierPos(int Index, double MinKwh, double Price);
 
 public class TariffService
 {
@@ -32,6 +33,16 @@ public class TariffService
             cur.PricePerKwh,
             next?.PricePerKwh,
             cur.MaxKwh.HasValue ? (double?)Math.Max(0, cur.MaxKwh.Value - kwh) : null);
+    }
+
+    /// <summary>Position (0-based index, lower bound, price) of the tier a monthly consumption falls in.</summary>
+    public async Task<TierPos> GetTierPosAsync(double kwh)
+    {
+        var tiers = await _db.TariffTiers.OrderBy(t => t.MinKwh).ToListAsync();
+        if (tiers.Count == 0) return new TierPos(0, 0, _fallbackPricePerKwh);
+        int idx = 0;
+        for (int i = 0; i < tiers.Count; i++) if (kwh >= tiers[i].MinKwh) idx = i;
+        return new TierPos(idx, tiers[idx].MinKwh, tiers[idx].PricePerKwh);
     }
 
     public async Task<double> EstimateCostAsync(double totalKwhThisMonth)

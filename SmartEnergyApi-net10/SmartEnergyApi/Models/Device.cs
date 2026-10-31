@@ -32,6 +32,14 @@ public class Device
     /// <summary>Nameplate power of the connected appliance in watts (optional, entered by the user).</summary>
     public double? RatedWatts { get; set; }
 
+    /// <summary>Last time the ESP32 pushed a reading or polled for a command. Null = never connected.
+    /// Online status is derived from this (see Device:OfflineAfterSeconds) instead of a flag that never resets.</summary>
+    public DateTime? LastSeenAt { get; set; }
+
+    /// <summary>kWh and EGP this device used since the user's last card charge (running counters, reset on every charge).</summary>
+    public double CardKwh { get; set; }
+    public double CardCostEgp { get; set; }
+
     public bool IsOnline { get; set; } = true;
     public bool IsOn { get; set; } = false;
 

@@ -26,7 +26,7 @@ public record ScanResultDto(string TempId, string Name, string Signal);
 public record ScanResponse(List<ScanResultDto> Found);
 
 /// <summary>Payload the ESP32 firmware pushes on each measurement cycle (FR5).</summary>
-public record IngestReadingRequest(double Voltage, double Current, double Power, double Energy, double Frequency, double PowerFactor);
+public record IngestReadingRequest(double Voltage, double Current, double Power, double Energy, double Frequency, double PowerFactor, bool? RelayOn = null);
 
 public record ReadingDto(long Id, double Voltage, double Current, double Power, double Energy, double Frequency, double PowerFactor, DateTime Timestamp);
 

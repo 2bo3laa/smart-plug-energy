@@ -16,16 +16,27 @@ public class DevicesController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly StatisticsService _stats;
+    private readonly CardService _card;
     private static readonly ConcurrentDictionary<int, DateTime> _tierChecks = new();
+    private static readonly ConcurrentDictionary<int, DateTime> _moneyChecks = new();
 
-    public DevicesController(AppDbContext db, StatisticsService stats)
+    private readonly TimeSpan _offlineAfter;
+
+    public DevicesController(AppDbContext db, StatisticsService stats, CardService card, IConfiguration config)
     {
         _db = db;
         _stats = stats;
+        _card = card;
+        // A device that has reported before counts as offline once it has been silent this long
+        // (keep it at least ~3x the ESP32 posting interval).
+        _offlineAfter = TimeSpan.FromSeconds(int.TryParse(config["Device:OfflineAfterSeconds"], out var secs) && secs > 0 ? secs : 90);
     }
 
-    private static DeviceDto ToDto(Device d) => new(
-        d.Id, d.Name, d.Room, d.IsOnline, d.IsOn,
+    private bool IsOnlineNow(Device d) =>
+        d.LastSeenAt is DateTime seen ? DateTime.UtcNow - seen <= _offlineAfter : d.IsOnline;
+
+    private DeviceDto ToDto(Device d) => new(
+        d.Id, d.Name, d.Room, IsOnlineNow(d), d.IsOn,
         d.Voltage, d.Current, d.Power, d.PowerFactor, d.TodayKwh, d.TodayCost, d.RatedWatts,
         d.Type, d.Brand, d.Model
     );
@@ -44,8 +55,8 @@ public class DevicesController : ControllerBase
         return Ok(new DeviceListResponse(
             devices.Select(ToDto).ToList(),
             devices.Count,
-            devices.Count(d => d.IsOnline),
-            devices.Count(d => !d.IsOnline)
+            devices.Count(d => IsOnlineNow(d)),
+            devices.Count(d => !IsOnlineNow(d))
         ));
     }
 
@@ -146,6 +157,8 @@ public class DevicesController : ControllerBase
         var d = await _db.Devices.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
         if (d == null) return NotFound(new { error = "Device not found" });
 
+        if (!IsOnlineNow(d)) return Conflict(new { error = "Device is offline" });
+
         var newState = !d.IsOn;
         d.IsOn = newState;
         // Queue the command for the ESP32 to pick up next time it polls (FR17); it also
@@ -180,6 +193,8 @@ public class DevicesController : ControllerBase
             return Unauthorized(new { error = "Invalid or missing device key" });
         }
 
+        var prev = await _db.Readings.Where(r => r.DeviceId == device.Id).OrderByDescending(r => r.Timestamp).FirstOrDefaultAsync();
+
         var reading = new Reading
         {
             DeviceId = device.Id,
@@ -197,12 +212,30 @@ public class DevicesController : ControllerBase
         var deltaKwh = Math.Max(0, req.Energy - device.CumulativeEnergyKwh);
         device.CumulativeEnergyKwh = req.Energy;
         device.TodayKwh += deltaKwh;
+
+        // Card + tariff accounting: energy used since the previous reading (counter delta, sanity-checked against
+        // power x time). Running totals are kept on the user/device rows, so nothing has to re-read old readings.
+        double billKwh = 0;
+        if (prev != null)
+        {
+            var hours = (reading.Timestamp - prev.Timestamp).TotalHours;
+            if (hours > 0 && hours <= 6)
+            {
+                var byPower = (prev.Power + req.Power) / 2.0 / 1000.0 * hours;
+                var plausibleMax = Math.Max(prev.Power, req.Power) / 1000.0 * hours * 1.5 + 0.001;
+                billKwh = (deltaKwh > 0 && deltaKwh <= plausibleMax) ? deltaKwh : byPower;
+            }
+        }
+        await _card.RecordConsumptionAsync(device, billKwh);
         device.Voltage = req.Voltage;
         device.Current = req.Current;
         device.Power = req.Power;
         device.Frequency = req.Frequency;
         device.PowerFactor = req.PowerFactor;
         device.IsOnline = true;
+        device.LastSeenAt = DateTime.UtcNow;
+        // If the firmware reports the real relay state, mirror it (unless a command is still waiting to be applied).
+        if (req.RelayOn is bool relayOn && device.PendingRelayCommand == null) device.IsOn = relayOn;
 
         // FR9/FR10: raise an alert if an active threshold is crossed.
         // Throttled to one alert per device per 10 minutes so a sustained overload does not flood the user.
@@ -253,6 +286,18 @@ public class DevicesController : ControllerBase
             try { await _stats.CheckTierAlertsAsync(device.UserId); } catch { /* never fail an ingest because of analytics */ }
         }
 
+        // Card balance + tier crossing: re-checked at most every 2 minutes per user.
+        if (!_moneyChecks.TryGetValue(device.UserId, out var lastMoney) || DateTime.UtcNow - lastMoney > TimeSpan.FromMinutes(2))
+        {
+            _moneyChecks[device.UserId] = DateTime.UtcNow;
+            try
+            {
+                await _card.CheckTierCrossingAsync(device.UserId);
+                await _card.CheckBalanceAlertsAsync(device.UserId);
+            }
+            catch { /* never fail an ingest because of analytics */ }
+        }
+
         return StatusCode(201, new { success = true });
     }
 
@@ -288,6 +333,8 @@ public class DevicesController : ControllerBase
             return Unauthorized(new { error = "Invalid or missing device key" });
         }
 
+        device.LastSeenAt = DateTime.UtcNow;   // a poll also proves the device is alive
+        device.IsOnline = true;
         var command = device.PendingRelayCommand;
         device.PendingRelayCommand = null; // one-shot: cleared once the firmware has fetched it
         await _db.SaveChangesAsync();

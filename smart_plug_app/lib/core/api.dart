@@ -21,9 +21,16 @@ class Api {
   // through 10.0.2.2. Change from Profile > Server for a real phone (use the PC's LAN IP).
   // Set at build time with --dart-define=API_URL=https://your-server/api (used by the GitHub workflow).
   static const String _envUrl = String.fromEnvironment('API_URL');
-  static String get defaultBaseUrl => _envUrl.isNotEmpty
-      ? _envUrl
-      : (kIsWeb ? 'http://localhost:4000/api' : 'http://smart-plug.runasp.net/api');
+  static String get defaultBaseUrl {
+    if (_envUrl.isNotEmpty) return _envUrl;
+    if (kIsWeb) {
+      // The web build is served by the API itself -> same origin. Local dev keeps localhost:4000.
+      final u = Uri.base;
+      if (u.host == 'localhost' || u.host == '127.0.0.1') return 'http://localhost:4000/api';
+      return '${u.origin}/api';
+    }
+    return 'http://smart-plug.runasp.net/api';
+  }
 
   String baseUrl = defaultBaseUrl;
   String? token;
@@ -215,7 +222,25 @@ class Api {
     final user = User.fromJson(d['user']);
     final devices = (d['stats']['devices'] ?? 0) as int;
     final schedules = (d['stats']['activeSchedules'] ?? 0) as int;
-    return ProfileResult(user, devices, schedules);
+    return ProfileResult(user, devices, schedules, d['googleEmail']?.toString());
+  }
+
+  // ---- prepaid card ----
+  Future<CardInfo> card() async => CardInfo.fromJson(await _send('GET', '/card'));
+  Future<CardInfo> rechargeCard(double amount) async => CardInfo.fromJson(await _send('POST', '/card/recharge', {'amount': amount}));
+  Future<CardInfo> setCardBalance(double amount) async => CardInfo.fromJson(await _send('PUT', '/card', {'amount': amount}));
+
+  // ---- Google account ----
+  Future<String?> linkGoogle(String idToken) async {
+    final d = await _send('POST', '/auth/google-link', {'idToken': idToken});
+    return d is Map ? d['googleEmail']?.toString() : null;
+  }
+
+  Future<void> unlinkGoogle() => _send('DELETE', '/auth/google-link');
+
+  Future<void> googleLogin(String idToken) async {
+    final d = await _send('POST', '/auth/google', {'idToken': idToken});
+    await _saveSession(d['token'], User.fromJson(d['user']));
   }
 
   Future<void> updateName(String name) async {
