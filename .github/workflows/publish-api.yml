@@ -1,4 +1,4 @@
-name: Publish API
+name: Publish API (+ web app)
 
 on:
   workflow_dispatch:
@@ -9,6 +9,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # ---- Flutter web build (the iPhone / browser version) ----
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Build Flutter web
+        working-directory: smart_plug_app
+        run: |
+          flutter create --project-name smart_plug_app --platforms web .
+          sed -i 's#<title>smart_plug_app</title>#<title>Smart Energy</title>#' web/index.html
+          sed -i 's#apple-mobile-web-app-title" content="smart_plug_app"#apple-mobile-web-app-title" content="Smart Energy"#' web/index.html
+          flutter pub get
+          dart run flutter_launcher_icons -f flutter_launcher_icons-web.yaml
+          flutter build web --release
+
+      - name: Put web build inside the API (wwwroot)
+        run: |
+          mkdir -p SmartEnergyApi-net10/SmartEnergyApi/wwwroot
+          cp -r smart_plug_app/build/web/. SmartEnergyApi-net10/SmartEnergyApi/wwwroot/
+
+      # ---- API publish ----
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
