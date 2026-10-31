@@ -9,13 +9,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ---- Flutter web build (the iPhone / browser version) ----
+      # ---- Flutter web build (optional: the iPhone / browser version) ----
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
 
       - name: Build Flutter web
+        continue-on-error: true
         working-directory: smart_plug_app
         run: |
           flutter create --project-name smart_plug_app --platforms web .
@@ -26,6 +27,7 @@ jobs:
           flutter build web --release
 
       - name: Put web build inside the API (wwwroot)
+        continue-on-error: true
         run: |
           mkdir -p SmartEnergyApi-net10/SmartEnergyApi/wwwroot
           cp -r smart_plug_app/build/web/. SmartEnergyApi-net10/SmartEnergyApi/wwwroot/
