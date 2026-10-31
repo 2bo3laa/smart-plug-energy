@@ -1,0 +1,47 @@
+name: Build iOS (unsigned IPA)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: smart_plug_app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Generate iOS project
+        run: flutter create --project-name smart_plug_app --platforms ios .
+
+      - name: App name + allow http (ATS)
+        run: |
+          PLIST=ios/Runner/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName 'Smart Energy'" $PLIST
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity dict" $PLIST
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity:NSAllowsArbitraryLoads bool true" $PLIST
+
+      - run: flutter pub get
+
+      - name: Launcher icons
+        run: dart run flutter_launcher_icons -f flutter_launcher_icons-ios.yaml
+
+      - name: Build (no codesign)
+        run: flutter build ios --release --no-codesign
+
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -qr SmartEnergy.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: smart-energy-ios-ipa
+          path: smart_plug_app/SmartEnergy.ipa
