@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../core/i18n.dart';
 import '../core/theme.dart';
 
 void toast(BuildContext c, String msg, {bool error = false}) {
@@ -113,7 +115,7 @@ class Field extends StatelessWidget {
                 style: const TextStyle(fontSize: 13.5, color: C.text1),
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  hintText: hint,
+                  hintText: tr(hint),
                   hintStyle: const TextStyle(color: C.text3),
                   contentPadding: const EdgeInsets.symmetric(vertical: 14),
                 ),
@@ -374,4 +376,113 @@ class AreaChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(AreaChartPainter oldDelegate) => oldDelegate.data != data;
+}
+
+
+/// Cross-screen navigation hints (e.g. a tapped notification asks Home to light up the card).
+class AppNav {
+  /// Tab the Shell should switch to (0 home, 1 history, 2 devices, 3 settings); consumed by Shell.
+  static final ValueNotifier<int?> tab = ValueNotifier<int?>(null);
+  /// What the next screen should light up, e.g. 'card'.
+  static final ValueNotifier<String?> highlight = ValueNotifier<String?>(null);
+}
+
+/// Pulses an amber glow + border around [child] for a few seconds when [active] turns true.
+/// Used after tapping a notification so the user sees exactly which item it was about.
+class Highlight extends StatefulWidget {
+  final bool active;
+  final Widget child;
+  final double radius;
+  final Color color;
+  const Highlight({super.key, required this.active, required this.child, this.radius = 14, this.color = C.amber});
+  @override
+  State<Highlight> createState() => _HighlightState();
+}
+
+class _HighlightState extends State<Highlight> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+  bool _on = false;
+  Timer? _t;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.active) _start();
+  }
+
+  @override
+  void didUpdateWidget(Highlight old) {
+    super.didUpdateWidget(old);
+    if (widget.active && !old.active) _start();
+  }
+
+  void _start() {
+    _on = true;
+    _c.repeat(reverse: true);
+    _t?.cancel();
+    _t = Timer(const Duration(milliseconds: 5600), () {
+      if (!mounted) return;
+      _c.stop();
+      setState(() => _on = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _t?.cancel();
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      child: widget.child,
+      builder: (_, child) {
+        final v = _on ? _c.value : 0.0;
+        final r = BorderRadius.circular(widget.radius + 2);
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: r,
+            boxShadow: _on ? [BoxShadow(color: widget.color.withOpacity(0.15 + 0.45 * v), blurRadius: 10 + 14 * v, spreadRadius: 1 + 2 * v)] : null,
+          ),
+          child: DecoratedBox(
+            position: DecorationPosition.foreground,
+            decoration: BoxDecoration(
+              borderRadius: r,
+              border: _on ? Border.all(color: widget.color.withOpacity(0.35 + 0.65 * v), width: 2) : null,
+            ),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Banner shown on the target screen of a tapped notification: which alert brought you here.
+class AlertNote extends StatelessWidget {
+  final String type, title, message, severity;
+  const AlertNote({super.key, required this.type, required this.title, required this.message, required this.severity});
+  @override
+  Widget build(BuildContext context) {
+    final c = severityColor(severity);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(color: C.dim(c), borderRadius: BorderRadius.circular(12), border: Border.all(color: c.withOpacity(0.4))),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Icon(severityIcon(type, severity), size: 17, color: c),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: c)),
+            const SizedBox(height: 2),
+            Text(message, style: const TextStyle(fontSize: 11.5, color: C.text2, height: 1.4)),
+          ]),
+        ),
+      ]),
+    );
+  }
 }

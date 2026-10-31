@@ -1,8 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../core/i18n.dart';
 import '../core/api.dart';
 import '../core/models.dart';
 import '../core/theme.dart';
 import '../widgets/common.dart';
+import 'device_detail.dart';
+import 'tariff.dart';
 
 class AlertsScreen extends StatefulWidget {
   const AlertsScreen({super.key});
@@ -42,12 +45,44 @@ class _AlertsScreenState extends State<AlertsScreen> {
     }
   }
 
+  /// Tap on a notification: mark it read, then go to where it came from and light that spot up.
   Future<void> _open(AlertItem a) async {
-    if (a.isRead) return;
-    try {
-      await Api.i.markAlertRead(a.id);
-      _load();
-    } on ApiException catch (_) {}
+    if (!a.isRead) {
+      try {
+        await Api.i.markAlertRead(a.id);
+      } on ApiException catch (_) {}
+    }
+    if (!mounted) return;
+    switch (a.type) {
+      case 'card':
+        AppNav.highlight.value = 'card';
+        AppNav.tab.value = 0;
+        Navigator.of(context).popUntil((r) => r.isFirst);
+        return;
+      case 'tier':
+        double? kwh;
+        try {
+          kwh = (await Api.i.statistics('month')).totalEnergyMonth;
+        } on ApiException catch (_) {}
+        if (!mounted) return;
+        await Navigator.push(context, MaterialPageRoute(builder: (_) => TariffScreen(currentKwh: kwh, highlightCurrent: true, note: a)));
+        break;
+      default:
+        const spots = {
+          'power': 'power',
+          'overload': 'overload',
+          'voltage': 'voltage',
+          'device_on': 'toggle',
+          'device_off': 'toggle',
+          'energy': 'energy',
+        };
+        if (a.deviceId == null) {
+          toast(context, 'This device no longer exists', error: true);
+        } else {
+          await Navigator.push(context, MaterialPageRoute(builder: (_) => DeviceDetailScreen(deviceId: a.deviceId!, highlight: spots[a.type], note: a)));
+        }
+    }
+    if (mounted) _load();
   }
 
   Future<void> _delete(AlertItem a) async {
@@ -61,11 +96,11 @@ class _AlertsScreenState extends State<AlertsScreen> {
 
   String _ago(DateTime t) {
     final d = DateTime.now().difference(t);
-    if (d.inMinutes < 1) return 'Just now';
-    if (d.inMinutes < 60) return '${d.inMinutes} min ago';
-    if (d.inHours < 24) return '${d.inHours} h ago';
-    if (d.inDays == 1) return 'Yesterday';
-    return '${d.inDays} days ago';
+    if (d.inMinutes < 1) return tr('Just now');
+    if (d.inMinutes < 60) return tf('{n} min ago', {'n': d.inMinutes});
+    if (d.inHours < 24) return tf('{n} h ago', {'n': d.inHours});
+    if (d.inDays == 1) return tr('Yesterday');
+    return tf('{n} days ago', {'n': d.inDays});
   }
 
   @override

@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../core/i18n.dart';
 import '../core/api.dart';
 import '../core/models.dart';
 import '../core/theme.dart';
@@ -129,7 +130,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('${s.label} · ${s.time}', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
               const SizedBox(height: 2),
-              Text('${s.type.toUpperCase()} · ${s.days}', style: const TextStyle(fontSize: 10.5, color: C.text3)),
+              Text('${tr(s.type.toUpperCase())} · ${tr(s.days)}', style: const TextStyle(fontSize: 10.5, color: C.text3)),
             ]),
           ),
           AppToggle(s.isActive, onChanged: (_) => _toggle(s)),

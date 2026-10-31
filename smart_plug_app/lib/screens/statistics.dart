@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../core/i18n.dart';
 import '../core/api.dart';
 import '../core/models.dart';
 import '../core/theme.dart';
@@ -79,7 +80,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
           decoration: BoxDecoration(color: C.dim(up ? C.red : C.green), borderRadius: BorderRadius.circular(99)),
-          child: Text('${up ? '▲' : '▼'} ${s.changeVsYesterday.abs().toStringAsFixed(0)}% vs Yesterday',
+          child: Text(tf('{arrow} {pct}% vs Yesterday', {'arrow': up ? '▲' : '▼', 'pct': s.changeVsYesterday.abs().toStringAsFixed(0)}),
               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: up ? C.red : C.green)),
         ),
       ]),
@@ -152,8 +153,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         ]),
         const SizedBox(height: 10),
         Text(
-          'Current tier: ${f.currentPrice.toStringAsFixed(2)} EGP/kWh'
-          '${hasNext ? ' · ${f.kwhUntilNext!.toStringAsFixed(0)} kWh left before ${f.nextPrice!.toStringAsFixed(2)} EGP/kWh' : ''}',
+          tf('Current tier: {p} EGP/kWh', {'p': f.currentPrice.toStringAsFixed(2)}) +
+              (hasNext ? ' · ' + tf('{k} kWh left before {n} EGP/kWh', {'k': f.kwhUntilNext!.toStringAsFixed(0), 'n': f.nextPrice!.toStringAsFixed(2)}) : ''),
           style: const TextStyle(fontSize: 11.5, color: C.text2, height: 1.4),
         ),
         if (f.willCross)

@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../core/i18n.dart';
 import '../core/api.dart';
 import '../core/theme.dart';
 import 'login.dart';
@@ -16,10 +17,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 1800), () {
+    // After a language switch the UI restarts: skip the wait and land back on Settings.
+    final back = Lang.i.openSettingsAfterRestart && Api.i.loggedIn;
+    Lang.i.openSettingsAfterRestart = false;
+    Future.delayed(Duration(milliseconds: back ? 50 : 1800), () {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (_) => Api.i.loggedIn ? const Shell() : const LoginScreen(),
+        builder: (_) => Api.i.loggedIn ? Shell(initialTab: back ? 3 : 0) : const LoginScreen(),
       ));
     });
   }
@@ -37,17 +41,15 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         Center(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Container(
-              width: 88, height: 88,
+              width: 104, height: 104,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(26),
-                gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF1A2333), Color(0xFF0E141F)]),
-                border: Border.all(color: C.borderStrong),
+                borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(color: C.blue.withOpacity(0.06), spreadRadius: 14),
-                  BoxShadow(color: C.blue.withOpacity(0.25), blurRadius: 40),
+                  BoxShadow(color: const Color(0xFF22C55E).withOpacity(0.22), blurRadius: 44),
                 ],
               ),
-              child: const Icon(Icons.bolt_rounded, size: 42, color: C.blue),
+              child: ClipRRect(borderRadius: BorderRadius.circular(30), child: Image.asset('assets/logo.png', fit: BoxFit.cover)),
             ),
             const SizedBox(height: 26),
             const Text('Smart Plug', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.2)),

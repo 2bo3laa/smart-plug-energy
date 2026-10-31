@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../core/i18n.dart';
 import '../core/api.dart';
+import '../core/google.dart';
 import '../core/theme.dart';
 import '../widgets/common.dart';
 import 'forgot_password.dart';
@@ -17,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _pass = TextEditingController();
   bool _on = false;
   bool _loading = false;
+  bool _gLoading = false;
   double _pull = 0;
   static const _maxPull = 60.0;
   static const _threshold = 32.0;
@@ -52,6 +55,21 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _google() async {
+    setState(() => _gLoading = true);
+    try {
+      final token = await GoogleAuth.idToken();
+      if (token == null) return; // cancelled
+      await Api.i.googleLogin(token);
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const Shell()), (_) => false);
+    } on ApiException catch (e) {
+      if (mounted) toast(context, e.message, error: true);
+    } finally {
+      if (mounted) setState(() => _gLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,6 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
             child: Column(children: [
+              const Align(alignment: AlignmentDirectional.centerEnd, child: LangToggle()),
               SizedBox(
                 height: 250,
                 width: 160,
@@ -142,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Field(label: 'Email', hint: 'Enter Email', controller: _email, glass: true, keyboard: TextInputType.emailAddress),
                       Field(label: 'Password', hint: 'Enter Password', controller: _pass, glass: true, obscure: true),
                       Align(
-                        alignment: Alignment.centerRight,
+                        alignment: AlignmentDirectional.centerEnd,
                         child: GestureDetector(
                           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordScreen())),
                           child: const Padding(
@@ -152,6 +171,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       PrimaryButton('Sign In', onTap: _login, loading: _loading, color: const Color(0xFFE8AE45), textColor: const Color(0xFF241A05)),
+                      const SizedBox(height: 10),
+                      PrimaryButton('Continue with Google', onTap: _google, loading: _gLoading, outline: true, icon: Icons.account_circle_outlined),
                       const SizedBox(height: 14),
                       Center(
                         child: GestureDetector(

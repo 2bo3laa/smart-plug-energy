@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../core/i18n.dart';
 import '../core/api.dart';
 import '../core/models.dart';
 import '../core/theme.dart';
@@ -45,7 +46,7 @@ class _PickerSheetState extends State<_PickerSheet> {
             Container(width: 38, height: 4, decoration: BoxDecoration(color: C.borderStrong, borderRadius: BorderRadius.circular(9))),
             Padding(
               padding: const EdgeInsets.fromLTRB(22, 14, 22, 8),
-              child: Align(alignment: Alignment.centerLeft, child: Text(widget.title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800))),
+              child: Align(alignment: AlignmentDirectional.centerStart, child: Text(widget.title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800))),
             ),
             if (widget.searchable)
               Padding(
@@ -60,7 +61,7 @@ class _PickerSheetState extends State<_PickerSheet> {
                       child: TextField(
                         onChanged: (v) => setState(() => _q = v),
                         style: const TextStyle(fontSize: 13.5, color: C.text1),
-                        decoration: const InputDecoration(border: InputBorder.none, hintText: 'Search', hintStyle: TextStyle(color: C.text3), contentPadding: EdgeInsets.symmetric(vertical: 12)),
+                        decoration: InputDecoration(border: InputBorder.none, hintText: tr('Search'), hintStyle: const TextStyle(color: C.text3), contentPadding: const EdgeInsets.symmetric(vertical: 12)),
                       ),
                     ),
                   ]),
@@ -157,7 +158,7 @@ class _ApplianceSelectorState extends State<ApplianceSelector> {
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(22))),
       builder: (_) => _PickerSheet('Select brand', [
         const _Opt(Icon(Icons.edit_outlined, color: C.text2), 'My brand is not listed…', '__other__'),
-        for (final b in brands) _Opt(BrandLogo(b.name, size: 38), b.name, b.name, subtitle: '${b.count} model${b.count == 1 ? '' : 's'}'),
+        for (final b in brands) _Opt(BrandLogo(b.name, size: 38), b.name, b.name, subtitle: tf(b.count == 1 ? '{n} model' : '{n} models', {'n': b.count})),
       ]),
     );
     if (res == null || !mounted) return;
@@ -227,7 +228,7 @@ class _ApplianceSelectorState extends State<ApplianceSelector> {
       return Padding(
         padding: const EdgeInsets.only(bottom: 14),
         child: Row(children: [
-          Expanded(child: Text('Could not load appliance list ($_error)', style: const TextStyle(fontSize: 12, color: C.red))),
+          Expanded(child: Text(tf('Could not load appliance list ({e})', {'e': tr(_error!)}), style: const TextStyle(fontSize: 12, color: C.red))),
           TextButton(onPressed: _loadTypes, child: const Text('Retry')),
         ]),
       );

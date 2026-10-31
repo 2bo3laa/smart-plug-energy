@@ -31,7 +31,7 @@ public record ForecastDto(
 );
 
 public record ProfileStatsDto(int Devices, int ActiveSchedules);
-public record ProfileResponse(PublicUserDto User, ProfileStatsDto Stats);
+public record ProfileResponse(PublicUserDto User, ProfileStatsDto Stats, string? GoogleEmail = null);
 public record UpdateProfileRequest(string? Name);
 
 public record TariffTierDto(int Id, double MinKwh, double? MaxKwh, double PricePerKwh);

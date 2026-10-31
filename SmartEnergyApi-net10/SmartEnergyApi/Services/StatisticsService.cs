@@ -58,7 +58,8 @@ public class StatisticsService
             double bucketKwh;
             if (inBucket.Count > 0)
             {
-                var avgPowerWatts = inBucket.Average(r => r.Power);
+                // Average power per device, then summed: several plugs add up, they are not averaged together.
+                var avgPowerWatts = inBucket.GroupBy(r => r.DeviceId).Sum(g => g.Average(r => r.Power));
                 var bucketHours = (bucketEnd - bucketStart).TotalHours;
                 bucketKwh = avgPowerWatts / 1000.0 * bucketHours;
             }
@@ -74,7 +75,7 @@ public class StatisticsService
         double energyToday;
         if (last24h.Count > 0)
         {
-            energyToday = EnergyFromReadings(last24h);
+            energyToday = EnergyFromAllReadings(last24h);
         }
         else
         {
@@ -83,7 +84,7 @@ public class StatisticsService
 
         // --- Previous 24h window, for the day-over-day change indicator ---
         var previous24h = readings.Where(r => r.Timestamp >= now.AddHours(-48) && r.Timestamp < now.AddHours(-24)).ToList();
-        double energyYesterday = previous24h.Count > 0 ? EnergyFromReadings(previous24h) : energyToday;
+        double energyYesterday = previous24h.Count > 0 ? EnergyFromAllReadings(previous24h) : energyToday;
         double changeVsYesterday = energyYesterday > 0
             ? Math.Round((energyToday - energyYesterday) / energyYesterday * 100.0, 1)
             : 0;
@@ -95,7 +96,7 @@ public class StatisticsService
             .OrderBy(r => r.Timestamp)
             .ToListAsync();
         double totalEnergyMonth = monthReadings.Count > 0
-            ? EnergyFromReadings(monthReadings)
+            ? EnergyFromAllReadings(monthReadings)
             : energyToday * DateTime.DaysInMonth(now.Year, now.Month);
 
         double totalCostMonth = await _tariff.EstimateCostAsync(totalEnergyMonth);
@@ -151,7 +152,7 @@ public class StatisticsService
             .Where(r => deviceIds.Contains(r.DeviceId) && r.Timestamp >= monthStart)
             .OrderBy(r => r.Timestamp).ToListAsync();
         if (monthReadings.Count < 2) return;
-        var total = EnergyFromReadings(monthReadings);
+        var total = EnergyFromAllReadings(monthReadings);
         var f = await BuildForecastAsync(now, monthStart, monthReadings, total);
         if (!f.WillCrossNextTier || f.NextPricePerKwh == null) return;
         var cutoff = now.AddHours(-24);
@@ -170,6 +171,9 @@ public class StatisticsService
     /// trapezoidal rule on instantaneous power over time - i.e. real
     /// numerical integration of P(t) rather than a flat average.
     /// </summary>
+    public static double EnergyFromAllReadings(IEnumerable<Reading> readings) =>
+        readings.GroupBy(r => r.DeviceId).Sum(g => EnergyFromReadings(g.OrderBy(r => r.Timestamp).ToList()));
+
     private static double EnergyFromReadings(List<Reading> orderedReadings)
     {
         if (orderedReadings.Count == 0) return 0;

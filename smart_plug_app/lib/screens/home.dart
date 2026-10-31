@@ -1,8 +1,10 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../core/i18n.dart';
 import '../core/api.dart';
 import '../core/models.dart';
 import '../core/theme.dart';
+import '../widgets/card_widget.dart';
 import '../widgets/catalog_widgets.dart';
 import '../widgets/common.dart';
 import 'add_device.dart';
@@ -18,6 +20,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   DeviceList? _list;
+  CardInfo? _card;
+  bool _hlCard = false;
+  bool _ready = false;
   String? _error;
   int _sel = 0;
   int _unread = 0;
@@ -27,6 +32,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    AppNav.highlight.addListener(_consumeHighlight);
+    _consumeHighlight();
+    _ready = true;
     _load();
     // Near real-time live readings (FR7): poll every 5 s, matching the ESP32 push interval.
     _timer = Timer.periodic(const Duration(seconds: 5), (_) => _load(silent: true));
@@ -35,16 +43,36 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    AppNav.highlight.removeListener(_consumeHighlight);
     super.dispose();
+  }
+
+  /// A tapped notification (card balance) asks Home to light up the card.
+  void _consumeHighlight() {
+    if (AppNav.highlight.value != 'card') return;
+    AppNav.highlight.value = null;
+    if (!_ready) {
+      _hlCard = true; // first build: the Highlight starts pulsing as soon as it appears
+      return;
+    }
+    setState(() => _hlCard = false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _hlCard = true);
+    });
   }
 
   Future<void> _load({bool silent = false}) async {
     try {
       final l = await Api.i.devices();
       final a = await Api.i.alerts();
+      CardInfo? c;
+      try {
+        c = await Api.i.card();
+      } on ApiException catch (_) {}
       if (!mounted) return;
       setState(() {
         _list = l;
+        if (c != null) _card = c;
         _unread = a.unreadCount;
         _error = null;
         if (_sel >= l.devices.length) _sel = 0;
@@ -72,6 +100,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _editCard() async {
+    final r = await showCardSheet(context, hasCard: _card?.hasCard ?? false);
+    if (r != null && mounted) setState(() => _card = r);
+  }
+
   Future<void> _addDevice() async {
     final ok = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => const AddDeviceScreen()));
     if (ok == true) _load();
@@ -93,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ]),
         Padding(
           padding: const EdgeInsets.only(top: 6, bottom: 14),
-          child: Text('Welcome back${name.isEmpty ? '' : ', $name'} 👋', style: const TextStyle(fontSize: 12.5, color: C.text2)),
+          child: Text(name.isEmpty ? '${tr('Welcome back')} 👋' : tf('Welcome back, {name}', {'name': name}) + ' 👋', style: const TextStyle(fontSize: 12.5, color: C.text2)),
         ),
         Expanded(child: _body()),
       ]),
@@ -129,6 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: C.card,
       onRefresh: _load,
       child: ListView(padding: const EdgeInsets.only(bottom: 16), children: [
+        CardBalance(info: _card, onEdit: _editCard, highlight: _hlCard),
         if (devices.length > 1)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -220,7 +254,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Text('Cost', style: TextStyle(fontSize: 11, color: C.text2)),
                 Padding(
                   padding: const EdgeInsets.only(top: 2, bottom: 6),
-                  child: Text('${d.todayCost.toStringAsFixed(2)} EGP', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: C.green)),
+                  child: Text(egp(d.todayCost), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: C.green)),
                 ),
                 GestureDetector(
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DeviceDetailScreen(deviceId: d.id))).then((_) => _load(silent: true)),

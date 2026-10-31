@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../core/i18n.dart';
 import '../core/api.dart';
 import '../core/models.dart';
 import '../core/theme.dart';
@@ -7,7 +8,9 @@ import '../widgets/common.dart';
 /// Shows the stepped residential tariff and highlights the tier the month's consumption is in.
 class TariffScreen extends StatefulWidget {
   final double? currentKwh;
-  const TariffScreen({super.key, this.currentKwh});
+  final bool highlightCurrent;
+  final AlertItem? note;
+  const TariffScreen({super.key, this.currentKwh, this.highlightCurrent = false, this.note});
   @override
   State<TariffScreen> createState() => _TariffScreenState();
 }
@@ -46,10 +49,12 @@ class _TariffScreenState extends State<TariffScreen> {
           padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const TopNav('Electricity Tariff'),
+            if (widget.note != null)
+              AlertNote(type: widget.note!.type, title: tr(widget.note!.title), message: tr(widget.note!.message), severity: widget.note!.severity),
             if (widget.currentKwh != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 14),
-                child: Text('This month so far: ${widget.currentKwh!.toStringAsFixed(1)} kWh', style: const TextStyle(fontSize: 12.5, color: C.text2)),
+                child: Text(tf('This month so far: {v}', {'v': kwhText(widget.currentKwh!, 1)}), style: const TextStyle(fontSize: 12.5, color: C.text2)),
               ),
             Expanded(
               child: _error != null && tiers == null
@@ -75,9 +80,13 @@ class _TariffScreenState extends State<TariffScreen> {
 
   Widget _row(int n, TariffTier t) {
     final cur = _isCurrent(t);
-    final range = t.maxKwh == null ? '${t.minKwh.toStringAsFixed(0)}+ kWh' : '${t.minKwh.toStringAsFixed(0)} – ${t.maxKwh!.toStringAsFixed(0)} kWh';
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+    final range = t.maxKwh == null ? '${t.minKwh.toStringAsFixed(0)}+ ${tr('kWh')}' : '${t.minKwh.toStringAsFixed(0)} – ${t.maxKwh!.toStringAsFixed(0)} ${tr('kWh')}';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Highlight(
+      active: widget.highlightCurrent && cur,
+      radius: 14,
+      child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: cur ? C.dim(C.blue) : C.card,
@@ -98,8 +107,8 @@ class _TariffScreenState extends State<TariffScreen> {
             if (cur) const Padding(padding: EdgeInsets.only(top: 2), child: Text('You are here', style: TextStyle(fontSize: 10.5, color: C.blue, fontWeight: FontWeight.w600))),
           ]),
         ),
-        Text('${t.price.toStringAsFixed(2)} EGP/kWh', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800)),
+        Text('${t.price.toStringAsFixed(2)} ${tr('EGP')}/${tr('kWh')}', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800)),
       ]),
-    );
+    )));
   }
 }

@@ -135,7 +135,41 @@ class ProfileResult {
   final User user;
   final int devices;
   final int activeSchedules;
-  ProfileResult(this.user, this.devices, this.activeSchedules);
+  final String? googleEmail;
+  ProfileResult(this.user, this.devices, this.activeSchedules, [this.googleEmail]);
+}
+
+/// One device's share of what has been taken from the prepaid card.
+class CardDevice {
+  final int deviceId;
+  final String name, room;
+  final String? type;
+  final double kwh, cost, percent;
+  CardDevice(this.deviceId, this.name, this.room, this.type, this.kwh, this.cost, this.percent);
+  factory CardDevice.fromJson(Map<String, dynamic> j) => CardDevice(
+        j['deviceId'], j['name'] ?? '', j['room'] ?? '', j['type'],
+        _d(j['kwh']), _d(j['cost']), _d(j['percent']),
+      );
+}
+
+/// Prepaid electricity card: what was loaded, what is left, and where it went.
+class CardInfo {
+  final bool hasCard, low, empty;
+  final double balance, charged, spent, totalKwh;
+  final DateTime? since;
+  final List<CardDevice> devices;
+  CardInfo(this.hasCard, this.balance, this.charged, this.since, this.spent, this.totalKwh, this.low, this.empty, this.devices);
+  factory CardInfo.fromJson(Map<String, dynamic> j) {
+    var raw = (j['since'] ?? '').toString();
+    if (raw.isNotEmpty && !raw.endsWith('Z') && !raw.contains('+')) raw = '${raw}Z';
+    return CardInfo(
+      j['hasCard'] ?? false, _d(j['balance']), _d(j['charged']), DateTime.tryParse(raw)?.toLocal(),
+      _d(j['spent']), _d(j['totalKwh']), j['low'] ?? false, j['empty'] ?? false,
+      ((j['devices'] ?? []) as List).map((e) => CardDevice.fromJson(e)).toList(),
+    );
+  }
+  /// 0..1 share of the loaded amount that is still left.
+  double get remainingFraction => charged <= 0 ? 0 : (balance / charged).clamp(0.0, 1.0);
 }
 
 class TariffTier {

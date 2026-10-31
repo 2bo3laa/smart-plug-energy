@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../core/i18n.dart';
 import '../core/api.dart';
 import '../core/theme.dart';
 import '../widgets/common.dart';
+import 'account.dart';
 import 'alerts.dart';
 import 'login.dart';
 import 'tariff.dart';
@@ -33,28 +35,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _editName() async {
-    final c = TextEditingController(text: Api.i.user?.name ?? '');
-    final v = await showDialog<String>(
+  Future<void> _openAccount() async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => const AccountScreen()));
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _pickLanguage() async {
+    final pick = await showModalBottomSheet<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: C.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Account Settings', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-        content: Field(label: 'Full Name', hint: 'Your name', controller: c),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: C.text2))),
-          TextButton(onPressed: () => Navigator.pop(ctx, c.text.trim()), child: const Text('Save')),
-        ],
+      backgroundColor: C.card,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 20, 22, 16),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Language', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 12),
+            for (final o in const [('ar', 'العربية'), ('en', 'English')])
+              InkWell(
+                onTap: () => Navigator.pop(ctx, o.$1),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: Row(children: [
+                    Expanded(child: Text(o.$2, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600))),
+                    if (Lang.i.code == o.$1) const Icon(Icons.check_circle_rounded, color: C.blue, size: 20),
+                  ]),
+                ),
+              ),
+          ]),
+        ),
       ),
     );
-    if (v == null || v.isEmpty) return;
-    try {
-      await Api.i.updateName(v);
-      if (mounted) setState(() {});
-    } on ApiException catch (e) {
-      if (mounted) toast(context, e.message, error: true);
-    }
+    if (pick != null) await Lang.i.set(pick, fromSettings: true);
   }
 
   Future<void> _server() async {
@@ -79,7 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (v == null || v.isEmpty) return;
     await Api.i.setBaseUrl(v);
     if (mounted) {
-      toast(context, 'Server set to ${Api.i.baseUrl}');
+      toast(context, tf('Server set to {url}', {'url': Api.i.baseUrl}));
       _load();
     }
   }
@@ -90,13 +102,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           backgroundColor: C.card,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Text('Help & Support', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-          content: const Text(
-            'Smart Consuming Energy — graduation project SU26_402.\n\n'
-            '• Tap the power button to switch an appliance on/off.\n'
-            '• Set a power threshold in Device Detail to get alerts.\n'
-            '• If the app cannot connect, check Settings › Server Address.\n\n'
-            'Educational prototype — not a replacement for the certified utility meter.',
-            style: TextStyle(fontSize: 12.5, color: C.text2, height: 1.5),
+          content: Text(
+            [
+              tr('Smart Consuming Energy — graduation project SU26_402.'),
+              '',
+              tr('• Tap the power button to switch an appliance on/off.'),
+              tr('• Set a power threshold in Device Detail to get alerts.'),
+              tr('• If the app cannot connect, check Settings › Server Address.'),
+              '',
+              tr('Educational prototype — not a replacement for the certified utility meter.'),
+            ].join('\n'),
+            style: const TextStyle(fontSize: 12.5, color: C.text2, height: 1.5),
           ),
           actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
         ),
@@ -130,7 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Text(u?.email ?? '', style: const TextStyle(fontSize: 12, color: C.text2)),
             ]),
           ),
-          IconBtn(Icons.edit_outlined, _editName, size: 16),
+          IconBtn(Icons.edit_outlined, _openAccount, size: 16),
         ]),
         const SizedBox(height: 18),
         Row(children: [
@@ -141,11 +157,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Expanded(child: _stat(_loaded ? _monthCost.toStringAsFixed(1) : '–', 'EGP / month')),
         ]),
         const SizedBox(height: 18),
-        _item(Icons.person_outline_rounded, C.blue, 'Account Settings', onTap: _editName),
+        _item(Icons.person_outline_rounded, C.blue, 'Account Settings', onTap: _openAccount),
         _item(Icons.notifications_none_rounded, C.amber, 'Notifications', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AlertsScreen()))),
-        _item(Icons.shield_outlined, C.green, 'Security & Privacy', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordScreen()))),
         _item(Icons.receipt_long_outlined, C.green, 'Electricity Tariff', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TariffScreen()))),
-        _item(Icons.language_rounded, C.purple, 'Language', value: 'English'),
+        _item(Icons.language_rounded, C.purple, 'Language', value: Lang.i.isAr ? 'العربية' : 'English', onTap: _pickLanguage),
         _item(Icons.dns_outlined, C.blue, 'Server Address', onTap: _server),
         _item(Icons.help_outline_rounded, C.text2, 'Help & Support', onTap: _help, last: true),
         const SizedBox(height: 14),
@@ -191,58 +206,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (value != null) Text(value, style: const TextStyle(fontSize: 12, color: C.text3)),
             if (onTap != null) const Icon(Icons.chevron_right_rounded, size: 18, color: C.text3),
           ]),
-        ),
-      );
-}
-
-class ChangePasswordScreen extends StatefulWidget {
-  const ChangePasswordScreen({super.key});
-  @override
-  State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
-}
-
-class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
-  final _cur = TextEditingController();
-  final _new = TextEditingController();
-  final _confirm = TextEditingController();
-  bool _loading = false;
-
-  Future<void> _save() async {
-    if (_cur.text.isEmpty || _new.text.length < 6) {
-      toast(context, 'New password must be at least 6 characters', error: true);
-      return;
-    }
-    if (_new.text != _confirm.text) {
-      toast(context, 'Passwords do not match', error: true);
-      return;
-    }
-    setState(() => _loading = true);
-    try {
-      await Api.i.changePassword(_cur.text, _new.text);
-      if (!mounted) return;
-      toast(context, 'Password updated');
-      Navigator.pop(context);
-    } on ApiException catch (e) {
-      if (mounted) toast(context, e.message, error: true);
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(22, 14, 22, 24),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const TopNav('Security & Privacy'),
-              Field(label: 'Current Password', hint: '••••••••', controller: _cur, icon: Icons.lock_outline_rounded, obscure: true),
-              Field(label: 'New Password', hint: '••••••••', controller: _new, icon: Icons.lock_outline_rounded, obscure: true),
-              Field(label: 'Confirm New Password', hint: '••••••••', controller: _confirm, icon: Icons.lock_outline_rounded, obscure: true),
-              const SizedBox(height: 8),
-              PrimaryButton('Update Password', onTap: _save, loading: _loading),
-            ]),
-          ),
         ),
       );
 }

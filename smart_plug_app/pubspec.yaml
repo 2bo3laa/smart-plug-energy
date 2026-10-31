@@ -11,6 +11,10 @@ dependencies:
     sdk: flutter
   http: ^1.2.0
   shared_preferences: ^2.2.2
+  google_sign_in: ^6.2.1
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
 dev_dependencies:
   flutter_test:
@@ -22,10 +26,11 @@ flutter:
   uses-material-design: true
   assets:
     - assets/brands/
+    - assets/logo.png
 
 flutter_launcher_icons:
   android: true
   ios: false
   image_path: "assets/icon/icon.png"
-  adaptive_icon_background: "#2563EB"
+  adaptive_icon_background: "#012B4E"
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"

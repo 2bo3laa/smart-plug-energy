@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../core/i18n.dart';
 import '../core/api.dart';
 import '../core/models.dart';
 import '../core/theme.dart';
@@ -51,7 +52,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> with SingleTickerProv
         child: Padding(
           padding: const EdgeInsets.fromLTRB(22, 14, 22, 20),
           child: Column(children: [
-            const Align(alignment: Alignment.centerLeft, child: TopNav('Add New Device')),
+            const Align(alignment: AlignmentDirectional.centerStart, child: TopNav('Add New Device')),
             SizedBox(
               width: 150, height: 150,
               child: AnimatedBuilder(
@@ -67,7 +68,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> with SingleTickerProv
               ),
             ),
             const SizedBox(height: 22),
-            Text(_found == null && _error == null ? 'Searching for nearby devices…' : (_error != null ? 'Scan failed' : '${_found!.length} device(s) found'),
+            Text(_found == null && _error == null ? 'Searching for nearby devices…' : (_error != null ? 'Scan failed' : tf('{n} device(s) found', {'n': _found!.length})),
                 style: const TextStyle(fontSize: 13, color: C.text2)),
             const SizedBox(height: 18),
             Expanded(
@@ -92,7 +93,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> with SingleTickerProv
                                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                   Text(f.name, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700)),
                                   const SizedBox(height: 2),
-                                  Text('${f.signal} · Tap to connect', style: const TextStyle(fontSize: 11.5, color: C.text2)),
+                                  Text('${tr(f.signal)} · ${tr('Tap to connect')}', style: const TextStyle(fontSize: 11.5, color: C.text2)),
                                 ]),
                               ),
                               const Icon(Icons.chevron_right_rounded, size: 18, color: C.text3),

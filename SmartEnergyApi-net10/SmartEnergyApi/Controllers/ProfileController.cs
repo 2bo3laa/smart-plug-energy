@@ -34,7 +34,8 @@ public class ProfileController : ControllerBase
 
         return Ok(new ProfileResponse(
             new PublicUserDto(user.Id, user.Name, user.Email),
-            new ProfileStatsDto(deviceCount, scheduleCount)
+            new ProfileStatsDto(deviceCount, scheduleCount),
+            user.GoogleEmail
         ));
     }
 

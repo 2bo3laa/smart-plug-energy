@@ -1,18 +1,40 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../core/i18n.dart';
 import '../core/theme.dart';
 import 'devices.dart';
+import '../widgets/common.dart';
 import 'home.dart';
 import 'profile.dart';
 import 'statistics.dart';
 
 class Shell extends StatefulWidget {
-  const Shell({super.key});
+  final int initialTab;
+  const Shell({super.key, this.initialTab = 0});
   @override
   State<Shell> createState() => _ShellState();
 }
 
 class _ShellState extends State<Shell> {
-  int _i = 0;
+  late int _i = widget.initialTab;
+
+  @override
+  void initState() {
+    super.initState();
+    AppNav.tab.addListener(_onNavTab);
+  }
+
+  @override
+  void dispose() {
+    AppNav.tab.removeListener(_onNavTab);
+    super.dispose();
+  }
+
+  void _onNavTab() {
+    final t = AppNav.tab.value;
+    if (t == null) return;
+    AppNav.tab.value = null;
+    if (mounted) setState(() => _i = t);
+  }
 
   static const _tabs = [
     (Icons.home_rounded, 'Home'),

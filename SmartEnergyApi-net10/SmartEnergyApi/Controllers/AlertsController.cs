@@ -14,10 +14,12 @@ namespace SmartEnergyApi.Controllers;
 public class AlertsController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly CardService _card;
 
-    public AlertsController(AppDbContext db)
+    public AlertsController(AppDbContext db, CardService card)
     {
         _db = db;
+        _card = card;
     }
 
     private static AlertDto ToDto(Alert a) => new(a.Id, a.DeviceId, a.Type, a.Title, a.Message, a.Severity, a.IsRead, a.CreatedAt);
@@ -27,6 +29,9 @@ public class AlertsController : ControllerBase
     public async Task<IActionResult> GetAll([FromQuery] string? severity)
     {
         var userId = User.GetUserId();
+        // Make sure money-related alerts are up to date before listing.
+        await _card.CheckTierCrossingAsync(userId);
+        await _card.CheckBalanceAlertsAsync(userId);
         var query = _db.Alerts.Where(a => a.UserId == userId);
         if (!string.IsNullOrWhiteSpace(severity))
         {

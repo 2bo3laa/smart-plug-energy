@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'package:flutter/material.dart' hide Threshold;
+import 'package:flutter/material.dart' hide Text, Threshold;
+import '../core/i18n.dart';
 import '../core/api.dart';
 import '../core/models.dart';
 import '../core/theme.dart';
@@ -10,7 +11,10 @@ import 'schedule.dart';
 
 class DeviceDetailScreen extends StatefulWidget {
   final int deviceId;
-  const DeviceDetailScreen({super.key, required this.deviceId});
+  /// Which part to light up when opened from a notification: power | voltage | toggle | energy | overload.
+  final String? highlight;
+  final AlertItem? note;
+  const DeviceDetailScreen({super.key, required this.deviceId, this.highlight, this.note});
   @override
   State<DeviceDetailScreen> createState() => _DeviceDetailScreenState();
 }
@@ -165,12 +169,18 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
                   : d == null
                       ? const Loader()
                       : ListView(padding: const EdgeInsets.only(bottom: 20), children: [
-                          Center(
-                            child: GestureDetector(
+                          if (widget.note != null)
+                            AlertNote(type: widget.note!.type, title: tr(widget.note!.title), message: tr(widget.note!.message), severity: widget.note!.severity),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4, bottom: 18),
+                            child: Center(
+                            child: Highlight(
+                              active: widget.highlight == 'toggle',
+                              radius: 74,
+                              child: GestureDetector(
                               onTap: _toggle,
                               child: Container(
                                 width: 148, height: 148,
-                                margin: const EdgeInsets.only(top: 4, bottom: 18),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(color: d.isOn ? C.green : C.borderStrong, width: 2),
@@ -190,6 +200,8 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
                                 ),
                               ),
                             ),
+                            ),
+                            ),
                           ),
                           if (!d.isOnline)
                             Container(
@@ -206,25 +218,25 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
                             crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
                             mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 1.9,
                             children: [
-                              MeasCard(Icons.bolt_rounded, C.blue, '${d.voltage.toStringAsFixed(1)} V', 'Voltage'),
+                              Highlight(active: widget.highlight == 'voltage', child: MeasCard(Icons.bolt_rounded, C.blue, '${d.voltage.toStringAsFixed(1)} V', 'Voltage')),
                               MeasCard(Icons.show_chart_rounded, C.green, '${d.current.toStringAsFixed(2)} A', 'Current'),
-                              MeasCard(Icons.flash_on_rounded, C.purple, '${d.power.toStringAsFixed(1)} W', 'Power'),
+                              Highlight(active: widget.highlight == 'power' || widget.highlight == 'overload', child: MeasCard(Icons.flash_on_rounded, C.purple, '${d.power.toStringAsFixed(1)} W', 'Power')),
                               MeasCard(Icons.speed_rounded, C.amber, d.powerFactor.toStringAsFixed(2), 'Power Factor'),
                             ],
                           ),
                           const SizedBox(height: 8),
                           _applianceRow(d),
                           _row(Icons.speed_rounded, C.purple, 'Rated Power',
-                              d.ratedWatts == null ? 'Not set' : '${d.ratedWatts!.toStringAsFixed(0)} W', onTap: _edit),
-                          _row(Icons.bolt_rounded, C.amber, 'Energy Usage', '${d.todayKwh.toStringAsFixed(2)} kWh'),
-                          _row(Icons.attach_money_rounded, C.green, 'Cost', '${d.todayCost.toStringAsFixed(2)} EGP'),
-                          _row(Icons.schedule_rounded, C.blue, 'Schedule', '$_activeSchedules Active', onTap: () async {
+                              d.ratedWatts == null ? tr('Not set') : '${d.ratedWatts!.toStringAsFixed(0)} W', onTap: _edit, hl: widget.highlight == 'overload'),
+                          _row(Icons.bolt_rounded, C.amber, 'Energy Usage', kwhText(d.todayKwh), hl: widget.highlight == 'energy'),
+                          _row(Icons.attach_money_rounded, C.green, 'Cost', egp(d.todayCost), hl: widget.highlight == 'energy'),
+                          _row(Icons.schedule_rounded, C.blue, 'Schedule', tf('{n} Active', {'n': _activeSchedules}), onTap: () async {
                             await Navigator.push(context, MaterialPageRoute(builder: (_) => ScheduleScreen(device: d)));
                             _load(silent: true);
                           }),
                           _row(Icons.notifications_active_outlined, C.red, 'Power Threshold',
-                              _th == null ? 'Not set' : '${_th!.limit.toStringAsFixed(0)} W${_th!.isActive ? '' : ' (off)'}',
-                              onTap: _editThreshold, last: true),
+                              _th == null ? tr('Not set') : '${_th!.limit.toStringAsFixed(0)} W${_th!.isActive ? '' : ' ${tr('(off)')}'}',
+                              onTap: _editThreshold, last: true, hl: widget.highlight == 'power'),
                         ]),
             ),
           ]),
@@ -236,7 +248,7 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
   Widget _applianceRow(Device d) {
     final label = [
       if (d.brand != null) d.brand!,
-      if (d.model != null) d.model! else if (d.type != null) d.type!.replaceAll('_', ' '),
+      if (d.model != null) d.model! else if (d.type != null) typeName(d.type),
     ].join(' · ');
     return InkWell(
       onTap: _edit,
@@ -247,21 +259,24 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
           TypeBadge(d.type, size: 30),
           const SizedBox(width: 11),
           const Expanded(child: Text('Appliance', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
-          if (d.brand != null) Padding(padding: const EdgeInsets.only(right: 8), child: BrandLogo(d.brand!, size: 26)),
+          if (d.brand != null) Padding(padding: const EdgeInsetsDirectional.only(end: 8), child: BrandLogo(d.brand!, size: 26)),
           Flexible(
             child: Text(
-              label.isEmpty ? 'Not set' : label,
-              textAlign: TextAlign.right, maxLines: 2, overflow: TextOverflow.ellipsis,
+              label.isEmpty ? tr('Not set') : label,
+              textAlign: TextAlign.end, maxLines: 2, overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 12, color: C.text3),
             ),
           ),
-          const Padding(padding: EdgeInsets.only(left: 6), child: Icon(Icons.chevron_right_rounded, size: 18, color: C.text3)),
+          const Padding(padding: EdgeInsetsDirectional.only(start: 6), child: Icon(Icons.chevron_right_rounded, size: 18, color: C.text3)),
         ]),
       ),
     );
   }
 
-  Widget _row(IconData i, Color c, String l, String v, {VoidCallback? onTap, bool last = false}) => InkWell(
+  Widget _row(IconData i, Color c, String l, String v, {VoidCallback? onTap, bool last = false, bool hl = false}) => Highlight(
+      active: hl,
+      radius: 10,
+      child: InkWell(
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
@@ -275,8 +290,8 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
             const SizedBox(width: 11),
             Expanded(child: Text(l, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
             Text(v, style: const TextStyle(fontSize: 12, color: C.text3)),
-            if (onTap != null) const Padding(padding: EdgeInsets.only(left: 6), child: Icon(Icons.chevron_right_rounded, size: 18, color: C.text3)),
+            if (onTap != null) const Padding(padding: EdgeInsetsDirectional.only(start: 6), child: Icon(Icons.chevron_right_rounded, size: 18, color: C.text3)),
           ]),
         ),
-      );
+      ));
 }

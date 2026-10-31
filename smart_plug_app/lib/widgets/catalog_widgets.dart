@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../core/i18n.dart';
 import '../core/theme.dart';
 
 /// Material icon used for each appliance type key (keys come from the API).
@@ -38,6 +39,13 @@ const Map<String, Color> _typeColors = {
   'toaster': Color(0xFFD97706),
   'computer': Color(0xFF3B82F6),
 };
+
+/// 'air_conditioner' -> 'Air Conditioner' (translated).
+String typeName(String? key) {
+  if (key == null || key.isEmpty) return '';
+  final w = key.split('_').map((e) => e.isEmpty ? e : e[0].toUpperCase() + e.substring(1)).join(' ').replaceAll('Tv', 'TV');
+  return tr(w);
+}
 
 IconData typeIcon(String? key) => _typeIcons[key] ?? Icons.power_outlined;
 Color typeColor(String? key) => _typeColors[key] ?? C.text2;

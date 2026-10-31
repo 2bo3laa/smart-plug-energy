@@ -9,3 +9,5 @@ services:
     envVars:
       - key: Jwt__Secret
         generateValue: true
+      - key: Google__ClientIds
+        sync: false   # Web OAuth client id(s) from Google Cloud Console, comma separated
