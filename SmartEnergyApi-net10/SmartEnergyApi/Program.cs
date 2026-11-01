@@ -48,6 +48,8 @@ builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<TariffService>();
 builder.Services.AddScoped<StatisticsService>();
 builder.Services.AddScoped<CardService>();
+builder.Services.AddScoped<ReadingService>();
+builder.Services.AddScoped<SimulationService>();
 builder.Services.AddScoped<GoogleAuthService>();
 builder.Services.AddHttpClient();
 builder.Services.AddCors(o => o.AddPolicy("AllowAll",
@@ -111,6 +113,7 @@ using (var scope = app.Services.CreateScope())
         var deviceColumns = new (string Name, string Sqlite, string SqlServer)[]
         {
             ("LastSeenAt", "TEXT NULL", "datetime2 NULL"),
+            ("IsSimulated", "INTEGER NOT NULL DEFAULT 0", "bit NOT NULL DEFAULT 0"),
             ("CardKwh", "REAL NOT NULL DEFAULT 0", "float NOT NULL DEFAULT 0"),
             ("CardCostEgp", "REAL NOT NULL DEFAULT 0", "float NOT NULL DEFAULT 0"),
         };

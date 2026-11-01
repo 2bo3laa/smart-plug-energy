@@ -19,6 +19,7 @@ public class AuthController : ControllerBase
     private readonly ILogger<AuthController> _logger;
     private readonly GoogleAuthService _google;
     private readonly bool _exposeResetCode;
+    private readonly bool _seedDemo;
 
     public AuthController(AppDbContext db, TokenService tokens, ILogger<AuthController> logger, GoogleAuthService google,
         IConfiguration config, IWebHostEnvironment env)
@@ -29,6 +30,8 @@ public class AuthController : ControllerBase
         _google = google;
         // The reset code is only returned to the client in Development or when Auth:ExposeResetCode=true
         // (demo only: there is no email provider, and returning it lets anyone reset any account).
+        // Fake demo devices/alerts are NOT created for new accounts any more (Demo:SeedOnSignup=true brings them back).
+        _seedDemo = string.Equals(config["Demo:SeedOnSignup"], "true", StringComparison.OrdinalIgnoreCase);
         _exposeResetCode = env.IsDevelopment() || string.Equals(config["Auth:ExposeResetCode"], "true", StringComparison.OrdinalIgnoreCase);
     }
 
@@ -61,8 +64,8 @@ public class AuthController : ControllerBase
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
-        // Demo devices/schedules/alerts so a brand-new account isn't empty.
-        SeedData.SeedForUser(_db, user.Id);
+        // A new account starts empty: the user adds devices from the app (they behave like real ones, see SimulationService).
+        if (_seedDemo) SeedData.SeedForUser(_db, user.Id);
 
         var token = _tokens.CreateToken(user.Id);
         return StatusCode(201, new AuthResponse(token, ToPublic(user)));

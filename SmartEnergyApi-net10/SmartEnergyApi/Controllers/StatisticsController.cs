@@ -10,10 +10,12 @@ namespace SmartEnergyApi.Controllers;
 public class StatisticsController : ControllerBase
 {
     private readonly StatisticsService _stats;
+    private readonly SimulationService _sim;
 
-    public StatisticsController(StatisticsService stats)
+    public StatisticsController(StatisticsService stats, SimulationService sim)
     {
         _stats = stats;
+        _sim = sim;
     }
 
     // GET /api/statistics?range=day|week|month|year
@@ -21,6 +23,7 @@ public class StatisticsController : ControllerBase
     public async Task<IActionResult> Get([FromQuery] string? range)
     {
         var userId = User.GetUserId();
+        await _sim.TickAsync(userId);
         var result = await _stats.BuildAsync(userId, range ?? "day");
         return Ok(result);
     }

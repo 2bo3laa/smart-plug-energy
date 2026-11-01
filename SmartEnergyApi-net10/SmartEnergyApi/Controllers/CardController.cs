@@ -11,10 +11,12 @@ namespace SmartEnergyApi.Controllers;
 public class CardController : ControllerBase
 {
     private readonly CardService _card;
+    private readonly SimulationService _sim;
 
-    public CardController(CardService card)
+    public CardController(CardService card, SimulationService sim)
     {
         _card = card;
+        _sim = sim;
     }
 
     // GET /api/card  (balance + approximate spend per device)
@@ -22,6 +24,7 @@ public class CardController : ControllerBase
     public async Task<IActionResult> Get()
     {
         var userId = User.GetUserId();
+        await _sim.TickAsync(userId);
         await _card.CheckTierCrossingAsync(userId);
         await _card.CheckBalanceAlertsAsync(userId);
         return Ok(await _card.GetSummaryAsync(userId));

@@ -37,6 +37,10 @@ public class Device
     public DateTime? LastSeenAt { get; set; }
 
     /// <summary>kWh and EGP this device used since the user's last card charge (running counters, reset on every charge).</summary>
+    /// <summary>True for devices added from the app that have no real ESP32 yet: the server simulates their readings
+    /// (see SimulationService). It turns false by itself when the first real reading arrives.</summary>
+    public bool IsSimulated { get; set; }
+
     public double CardKwh { get; set; }
     public double CardCostEgp { get; set; }
 

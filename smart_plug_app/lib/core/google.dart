@@ -23,8 +23,11 @@ class GoogleAuth {
       return token;
     } on ApiException {
       rethrow;
-    } catch (_) {
-      throw ApiException('Google sign-in failed. Please try again.');
+    } catch (e) {
+      // Keep the real reason (for example "ApiException: 10" = wrong SHA-1 / package) visible while setting up.
+      var detail = e.toString().replaceAll('\n', ' ');
+      if (detail.length > 140) detail = detail.substring(0, 140);
+      throw ApiException('Google sign-in failed. Please try again. [$detail]');
     }
   }
 }

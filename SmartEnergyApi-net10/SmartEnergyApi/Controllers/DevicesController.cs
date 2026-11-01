@@ -17,16 +17,19 @@ public class DevicesController : ControllerBase
     private readonly AppDbContext _db;
     private readonly StatisticsService _stats;
     private readonly CardService _card;
-    private static readonly ConcurrentDictionary<int, DateTime> _tierChecks = new();
-    private static readonly ConcurrentDictionary<int, DateTime> _moneyChecks = new();
 
     private readonly TimeSpan _offlineAfter;
+    private readonly ReadingService _readings;
+    private readonly SimulationService _sim;
 
-    public DevicesController(AppDbContext db, StatisticsService stats, CardService card, IConfiguration config)
+    public DevicesController(AppDbContext db, StatisticsService stats, CardService card, IConfiguration config,
+        ReadingService readings, SimulationService sim)
     {
         _db = db;
         _stats = stats;
         _card = card;
+        _readings = readings;
+        _sim = sim;
         // A device that has reported before counts as offline once it has been silent this long
         // (keep it at least ~3x the ESP32 posting interval).
         _offlineAfter = TimeSpan.FromSeconds(int.TryParse(config["Device:OfflineAfterSeconds"], out var secs) && secs > 0 ? secs : 90);
@@ -51,6 +54,7 @@ public class DevicesController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var userId = User.GetUserId();
+        await _sim.TickAsync(userId);   // virtual plugs: catch up their readings
         var devices = await _db.Devices.Where(d => d.UserId == userId).OrderBy(d => d.Id).ToListAsync();
         return Ok(new DeviceListResponse(
             devices.Select(ToDto).ToList(),
@@ -76,6 +80,7 @@ public class DevicesController : ControllerBase
     public async Task<IActionResult> GetOne(int id)
     {
         var userId = User.GetUserId();
+        await _sim.TickAsync(userId);
         var d = await _db.Devices.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
         if (d == null) return NotFound(new { error = "Device not found" });
         return Ok(new { device = ToDto(d) });
@@ -94,7 +99,7 @@ public class DevicesController : ControllerBase
         if (!await KnownType(type)) return BadRequest(new { error = "Unknown appliance type" });
 
         var userId = User.GetUserId();
-        var device = new Device { UserId = userId, Name = req.Name.Trim(), Room = req.Room.Trim(), IsOnline = true, IsOn = false,
+        var device = new Device { UserId = userId, Name = req.Name.Trim(), Room = req.Room.Trim(), IsOnline = true, IsOn = false, IsSimulated = _sim.Enabled,
             Type = type, Brand = Clean(req.Brand), Model = Clean(req.Model),
             RatedWatts = (req.RatedWatts is > 0 and <= 20000) ? req.RatedWatts : null };
         _db.Devices.Add(device);
@@ -154,6 +159,7 @@ public class DevicesController : ControllerBase
     public async Task<IActionResult> Toggle(int id)
     {
         var userId = User.GetUserId();
+        await _sim.TickAsync(userId);   // account for the time spent in the old state before switching
         var d = await _db.Devices.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
         if (d == null) return NotFound(new { error = "Device not found" });
 
@@ -193,111 +199,8 @@ public class DevicesController : ControllerBase
             return Unauthorized(new { error = "Invalid or missing device key" });
         }
 
-        var prev = await _db.Readings.Where(r => r.DeviceId == device.Id).OrderByDescending(r => r.Timestamp).FirstOrDefaultAsync();
-
-        var reading = new Reading
-        {
-            DeviceId = device.Id,
-            Voltage = req.Voltage,
-            Current = req.Current,
-            Power = req.Power,
-            Energy = req.Energy,
-            Frequency = req.Frequency,
-            PowerFactor = req.PowerFactor,
-            Timestamp = DateTime.UtcNow
-        };
-        _db.Readings.Add(reading);
-
-        // Update the device's live snapshot (FR7) and today's running totals.
-        var deltaKwh = Math.Max(0, req.Energy - device.CumulativeEnergyKwh);
-        device.CumulativeEnergyKwh = req.Energy;
-        device.TodayKwh += deltaKwh;
-
-        // Card + tariff accounting: energy used since the previous reading (counter delta, sanity-checked against
-        // power x time). Running totals are kept on the user/device rows, so nothing has to re-read old readings.
-        double billKwh = 0;
-        if (prev != null)
-        {
-            var hours = (reading.Timestamp - prev.Timestamp).TotalHours;
-            if (hours > 0 && hours <= 6)
-            {
-                var byPower = (prev.Power + req.Power) / 2.0 / 1000.0 * hours;
-                var plausibleMax = Math.Max(prev.Power, req.Power) / 1000.0 * hours * 1.5 + 0.001;
-                billKwh = (deltaKwh > 0 && deltaKwh <= plausibleMax) ? deltaKwh : byPower;
-            }
-        }
-        await _card.RecordConsumptionAsync(device, billKwh);
-        device.Voltage = req.Voltage;
-        device.Current = req.Current;
-        device.Power = req.Power;
-        device.Frequency = req.Frequency;
-        device.PowerFactor = req.PowerFactor;
-        device.IsOnline = true;
-        device.LastSeenAt = DateTime.UtcNow;
-        // If the firmware reports the real relay state, mirror it (unless a command is still waiting to be applied).
-        if (req.RelayOn is bool relayOn && device.PendingRelayCommand == null) device.IsOn = relayOn;
-
-        // FR9/FR10: raise an alert if an active threshold is crossed.
-        // Throttled to one alert per device per 10 minutes so a sustained overload does not flood the user.
-        var alertCutoff = DateTime.UtcNow.AddMinutes(-10);
-        var activeThreshold = device.Thresholds.FirstOrDefault(t => t.IsActive);
-        if (activeThreshold != null && req.Power > activeThreshold.LimitValue)
-        {
-            var recent = await _db.Alerts.AnyAsync(a => a.DeviceId == device.Id && a.Type == "power" && a.CreatedAt > alertCutoff);
-            if (!recent)
-            {
-                _db.Alerts.Add(new Alert
-                {
-                    UserId = device.UserId,
-                    DeviceId = device.Id,
-                    Type = "power",
-                    Title = "High Power Usage",
-                    Message = $"{device.Name} exceeded {activeThreshold.LimitValue}W (reading: {req.Power}W)",
-                    Severity = "error"
-                });
-            }
-        }
-
-        // Rated-power check: drawing well above the appliance nameplate usually means a fault.
-        if (device.RatedWatts is double rated && rated > 0 && req.Power > rated * 1.2)
-        {
-            var recent = await _db.Alerts.AnyAsync(a => a.DeviceId == device.Id && a.Type == "overload" && a.CreatedAt > alertCutoff);
-            if (!recent)
-            {
-                var pct = (int)Math.Round((req.Power / rated - 1) * 100);
-                _db.Alerts.Add(new Alert
-                {
-                    UserId = device.UserId,
-                    DeviceId = device.Id,
-                    Type = "overload",
-                    Title = "Above rated power",
-                    Message = $"{device.Name} is drawing {req.Power:0}W, {pct}% above its rated {rated:0}W. Check the appliance.",
-                    Severity = "warning"
-                });
-            }
-        }
-
-        await _db.SaveChangesAsync();
-
-        // Tariff-tier warning: re-evaluated at most once an hour per user.
-        if (!_tierChecks.TryGetValue(device.UserId, out var lastCheck) || DateTime.UtcNow - lastCheck > TimeSpan.FromHours(1))
-        {
-            _tierChecks[device.UserId] = DateTime.UtcNow;
-            try { await _stats.CheckTierAlertsAsync(device.UserId); } catch { /* never fail an ingest because of analytics */ }
-        }
-
-        // Card balance + tier crossing: re-checked at most every 2 minutes per user.
-        if (!_moneyChecks.TryGetValue(device.UserId, out var lastMoney) || DateTime.UtcNow - lastMoney > TimeSpan.FromMinutes(2))
-        {
-            _moneyChecks[device.UserId] = DateTime.UtcNow;
-            try
-            {
-                await _card.CheckTierCrossingAsync(device.UserId);
-                await _card.CheckBalanceAlertsAsync(device.UserId);
-            }
-            catch { /* never fail an ingest because of analytics */ }
-        }
-
+        device.IsSimulated = false;   // real hardware took over: stop simulating this device
+        await _readings.ApplyReadingAsync(device, req, DateTime.UtcNow);
         return StatusCode(201, new { success = true });
     }
 
