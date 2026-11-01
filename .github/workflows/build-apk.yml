@@ -39,6 +39,8 @@ jobs:
       - name: Generate launcher icons
         run: dart run flutter_launcher_icons
 
+      # A fixed signing key keeps the app's SHA-1 identical in every build. Google Sign-In (account linking)
+      # only works if that SHA-1 is registered in Google Cloud, so the key comes from a repository secret.
       - name: Use the fixed signing key
         env:
           DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
@@ -61,12 +63,21 @@ jobs:
           if [ -n "$INPUT_API_URL" ]; then API_URL="${INPUT_API_URL%/}/api"; fi
           flutter build apk --release --dart-define=API_URL=$API_URL --dart-define=GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
 
+      # Gradle ignores the fixed key on the runner, so the finished APK is re-signed with it here.
+      # This makes the app's SHA-1 identical in every build (Google Sign-In needs that).
+      - name: Re-sign the APK with the fixed key
+        env:
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          APK=build/app/outputs/flutter-apk/app-release.apk
+          BT="$(ls -d $ANDROID_HOME/build-tools/*/ | tail -1)"
+          if [ -n "$DEBUG_KEYSTORE_BASE64" ]; then
+            "${BT}apksigner" sign --ks ~/.android/debug.keystore --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android "$APK"
+            echo "Re-signed. Expected SHA-1 digest: 7a140d6a926a52625e1d49d115685bab06b67ce1"
+          fi
+          "${BT}apksigner" verify --print-certs "$APK" | grep -i "SHA-1" || true
+
       - uses: actions/upload-artifact@v4
         with:
           name: smart-plug-apk
           path: smart_plug_app/build/app/outputs/flutter-apk/app-release.apk
-
-      - name: Show the APK signing SHA-1 (must match Google Cloud)
-        run: |
-          APK=build/app/outputs/flutter-apk/app-release.apk
-          "$(ls -d $ANDROID_HOME/build-tools/*/ | tail -1)apksigner" verify --print-certs $APK | grep -i "SHA-1" || true
