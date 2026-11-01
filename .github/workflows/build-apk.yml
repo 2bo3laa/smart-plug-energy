@@ -39,8 +39,6 @@ jobs:
       - name: Generate launcher icons
         run: dart run flutter_launcher_icons
 
-      # A fixed signing key keeps the app's SHA-1 identical in every build. Google Sign-In (account linking)
-      # only works if that SHA-1 is registered in Google Cloud, so the key comes from a repository secret.
       - name: Use the fixed signing key
         env:
           DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
@@ -49,6 +47,7 @@ jobs:
             mkdir -p ~/.android
             echo "$DEBUG_KEYSTORE_BASE64" | base64 -d > ~/.android/debug.keystore
             echo "Using the fixed keystore from DEBUG_KEYSTORE_BASE64"
+            keytool -list -v -keystore ~/.android/debug.keystore -storepass android 2>/dev/null | grep -E "SHA1" || echo "WARNING: could not read the keystore (bad secret?)"
           else
             echo "No DEBUG_KEYSTORE_BASE64 secret: the APK is signed with a temporary key (Google linking will not work)"
           fi
@@ -66,3 +65,8 @@ jobs:
         with:
           name: smart-plug-apk
           path: smart_plug_app/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Show the APK signing SHA-1 (must match Google Cloud)
+        run: |
+          APK=build/app/outputs/flutter-apk/app-release.apk
+          "$(ls -d $ANDROID_HOME/build-tools/*/ | tail -1)apksigner" verify --print-certs $APK | grep -i "SHA-1" || true
