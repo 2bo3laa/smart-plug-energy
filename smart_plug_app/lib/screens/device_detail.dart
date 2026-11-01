@@ -7,6 +7,7 @@ import '../core/theme.dart';
 import '../widgets/catalog_widgets.dart';
 import '../widgets/common.dart';
 import 'device_setup.dart';
+import 'invoice.dart';
 import 'schedule.dart';
 
 class DeviceDetailScreen extends StatefulWidget {
@@ -230,6 +231,8 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
                               d.ratedWatts == null ? tr('Not set') : '${d.ratedWatts!.toStringAsFixed(0)} W', onTap: _edit, hl: widget.highlight == 'overload'),
                           _row(Icons.bolt_rounded, C.amber, 'Energy Usage', kwhText(d.todayKwh), hl: widget.highlight == 'energy'),
                           _row(Icons.attach_money_rounded, C.green, 'Cost', egp(d.todayCost), hl: widget.highlight == 'energy'),
+                          _row(Icons.receipt_long_rounded, C.green, 'Estimated Invoice', tr('Weekly / Monthly'),
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => InvoiceScreen(deviceId: d.id, deviceName: d.name)))),
                           _row(Icons.schedule_rounded, C.blue, 'Schedule', tf('{n} Active', {'n': _activeSchedules}), onTap: () async {
                             await Navigator.push(context, MaterialPageRoute(builder: (_) => ScheduleScreen(device: d)));
                             _load(silent: true);

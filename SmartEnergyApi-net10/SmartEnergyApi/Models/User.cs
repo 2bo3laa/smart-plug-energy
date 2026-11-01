@@ -37,6 +37,13 @@ public class User
     public bool CardCountersReady { get; set; }
     public int TierIndex { get; set; }
 
+    // ---- E-mail reports (chosen in Settings) ----
+    public bool ReportWeekly { get; set; }
+    public bool ReportMonthly { get; set; }
+    [MaxLength(8)] public string? ReportLang { get; set; }
+    public DateTime? LastWeeklyReportAt { get; set; }
+    public DateTime? LastMonthlyReportAt { get; set; }
+
     // ---- Linked Google account ----
     [MaxLength(64)] public string? GoogleId { get; set; }
     [MaxLength(180)] public string? GoogleEmail { get; set; }

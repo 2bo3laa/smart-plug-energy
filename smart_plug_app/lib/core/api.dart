@@ -238,6 +238,18 @@ class Api {
 
   Future<void> unlinkGoogle() => _send('DELETE', '/auth/google-link');
 
+  // ---- estimated invoice ----
+  Future<Invoice> invoice(String period, {int? deviceId}) async =>
+      Invoice.fromJson(await _send('GET', '/invoice?period=$period${deviceId != null ? '&deviceId=$deviceId' : ''}'));
+  Future<void> emailInvoice(String period, {int? deviceId, required String lang}) =>
+      _send('POST', '/invoice/email', {'period': period, 'deviceId': deviceId, 'lang': lang});
+
+  // ---- e-mail reports ----
+  Future<Map<String, dynamic>> reportSettings() async => Map<String, dynamic>.from(await _send('GET', '/reports/settings'));
+  Future<Map<String, dynamic>> saveReportSettings(bool weekly, bool monthly, String lang) async =>
+      Map<String, dynamic>.from(await _send('PUT', '/reports/settings', {'weekly': weekly, 'monthly': monthly, 'lang': lang}));
+  Future<void> sendReportNow(String period, String lang) => _send('POST', '/reports/send-now', {'period': period, 'lang': lang});
+
   Future<void> googleLogin(String idToken) async {
     final d = await _send('POST', '/auth/google', {'idToken': idToken});
     await _saveSession(d['token'], User.fromJson(d['user']));

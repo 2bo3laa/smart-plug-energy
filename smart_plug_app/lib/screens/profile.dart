@@ -7,6 +7,7 @@ import 'account.dart';
 import 'alerts.dart';
 import 'login.dart';
 import 'tariff.dart';
+import 'reports.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -159,6 +160,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 18),
         _item(Icons.person_outline_rounded, C.blue, 'Account Settings', onTap: _openAccount),
         _item(Icons.notifications_none_rounded, C.amber, 'Notifications', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AlertsScreen()))),
+        _item(Icons.mail_outline_rounded, C.blue, 'Email Reports', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportsScreen()))),
         _item(Icons.receipt_long_outlined, C.green, 'Electricity Tariff', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TariffScreen()))),
         _item(Icons.language_rounded, C.purple, 'Language', value: Lang.i.isAr ? 'العربية' : 'English', onTap: _pickLanguage),
         _item(Icons.dns_outlined, C.blue, 'Server Address', onTap: _server),

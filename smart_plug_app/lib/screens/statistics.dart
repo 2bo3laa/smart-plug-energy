@@ -5,6 +5,7 @@ import '../core/models.dart';
 import '../core/theme.dart';
 import '../widgets/common.dart';
 import 'tariff.dart';
+import 'invoice.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -99,6 +100,26 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       ]),
       const SizedBox(height: 14),
       _forecast(s),
+      AppCard(
+        margin: const EdgeInsets.only(bottom: 14),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InvoiceScreen())),
+        child: Row(children: [
+          Container(
+            width: 40, height: 40,
+            decoration: BoxDecoration(color: C.dim(C.green), borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.receipt_long_rounded, size: 20, color: C.green),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Estimated Invoice', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700)),
+              SizedBox(height: 2),
+              Text('Weekly or monthly bill for all devices', style: TextStyle(fontSize: 11.5, color: C.text2)),
+            ]),
+          ),
+          const Icon(Icons.chevron_right_rounded, color: C.text3),
+        ]),
+      ),
       const SectionLabel('Device Breakdown'),
       if (s.breakdown.isEmpty)
         const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Text('No consumption data yet.', style: TextStyle(color: C.text3, fontSize: 12.5)))

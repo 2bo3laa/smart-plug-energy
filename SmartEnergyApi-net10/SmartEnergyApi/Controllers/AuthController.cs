@@ -232,7 +232,30 @@ public class AuthController : ControllerBase
         var user = await _db.Users.FirstOrDefaultAsync(u => u.GoogleId == identity.Sub);
         if (user == null)
         {
-            return Unauthorized(new { error = "No account is linked to this Google account. Sign in with your email, then link Google from Account Settings." });
+            // Google already verified this e-mail address. If an account with it exists, link it and sign in;
+            // otherwise this is a new user: create the account right away (one-tap sign-up).
+            user = await _db.Users.FirstOrDefaultAsync(u => u.Email == identity.Email);
+            if (user != null)
+            {
+                user.GoogleId = identity.Sub;
+                user.GoogleEmail = identity.Email;
+                await _db.SaveChangesAsync();
+            }
+            else
+            {
+                user = new User
+                {
+                    Name = string.IsNullOrWhiteSpace(identity.Name) ? identity.Email.Split('@')[0] : identity.Name.Trim(),
+                    Email = identity.Email,
+                    // Random password nobody knows: this account signs in with Google (or resets it with "Forgot password").
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(24)), workFactor: 10),
+                    GoogleId = identity.Sub,
+                    GoogleEmail = identity.Email
+                };
+                _db.Users.Add(user);
+                await _db.SaveChangesAsync();
+                if (_seedDemo) SeedData.SeedForUser(_db, user.Id);
+            }
         }
         return Ok(new AuthResponse(_tokens.CreateToken(user.Id), ToPublic(user)));
     }

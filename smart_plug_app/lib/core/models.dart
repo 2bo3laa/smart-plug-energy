@@ -207,3 +207,77 @@ class CatalogModel {
   factory CatalogModel.fromJson(Map<String, dynamic> j) =>
       CatalogModel(j['id'] ?? 0, j['model'] ?? '', _d(j['ratedWatts']), j['source'] ?? 'typical');
 }
+
+class InvoiceLine {
+  final int deviceId;
+  final String name, room;
+  final double hours, peakWatts, kwh, costEgp, sharePercent;
+  InvoiceLine(this.deviceId, this.name, this.room, this.hours, this.peakWatts, this.kwh, this.costEgp, this.sharePercent);
+  factory InvoiceLine.fromJson(Map<String, dynamic> j) => InvoiceLine(
+        j['deviceId'] ?? 0,
+        j['name'] ?? '',
+        j['room'] ?? '',
+        (j['hours'] ?? 0).toDouble(),
+        (j['peakWatts'] ?? 0).toDouble(),
+        (j['kwh'] ?? 0).toDouble(),
+        (j['costEgp'] ?? 0).toDouble(),
+        (j['sharePercent'] ?? 0).toDouble(),
+      );
+}
+
+/// One band of the stepped tariff (monthly invoices).
+class InvoiceBand {
+  final int tier;
+  final double fromKwh, price, kwh, costEgp;
+  final double? toKwh;
+  InvoiceBand(this.tier, this.fromKwh, this.toKwh, this.price, this.kwh, this.costEgp);
+  factory InvoiceBand.fromJson(Map<String, dynamic> j) => InvoiceBand(
+        j['tier'] ?? 1,
+        (j['fromKwh'] ?? 0).toDouble(),
+        j['toKwh'] == null ? null : (j['toKwh']).toDouble(),
+        (j['price'] ?? 0).toDouble(),
+        (j['kwh'] ?? 0).toDouble(),
+        (j['costEgp'] ?? 0).toDouble(),
+      );
+}
+
+/// Estimated invoice for the whole home or for one device, weekly or monthly.
+class Invoice {
+  final String number, period;
+  final DateTime from, to;
+  final bool singleDevice;
+  final double totalKwh, totalCostEgp, homeKwh, homeCostEgp, pricePerKwh;
+  final int tierNumber;
+  final List<InvoiceLine> lines;
+  final List<InvoiceBand> bands;
+  Invoice({
+    required this.number,
+    required this.period,
+    required this.from,
+    required this.to,
+    required this.singleDevice,
+    required this.totalKwh,
+    required this.totalCostEgp,
+    required this.homeKwh,
+    required this.homeCostEgp,
+    required this.pricePerKwh,
+    required this.tierNumber,
+    required this.lines,
+    required this.bands,
+  });
+  factory Invoice.fromJson(Map<String, dynamic> j) => Invoice(
+        number: j['number'] ?? '',
+        period: j['period'] ?? 'weekly',
+        from: DateTime.parse(j['from']),
+        to: DateTime.parse(j['to']),
+        singleDevice: j['singleDevice'] ?? false,
+        totalKwh: (j['totalKwh'] ?? 0).toDouble(),
+        totalCostEgp: (j['totalCostEgp'] ?? 0).toDouble(),
+        homeKwh: (j['homeKwh'] ?? 0).toDouble(),
+        homeCostEgp: (j['homeCostEgp'] ?? 0).toDouble(),
+        pricePerKwh: (j['pricePerKwh'] ?? 0).toDouble(),
+        tierNumber: j['tierNumber'] ?? 1,
+        lines: ((j['lines'] ?? []) as List).map((e) => InvoiceLine.fromJson(e)).toList(),
+        bands: ((j['bands'] ?? []) as List).map((e) => InvoiceBand.fromJson(e)).toList(),
+      );
+}

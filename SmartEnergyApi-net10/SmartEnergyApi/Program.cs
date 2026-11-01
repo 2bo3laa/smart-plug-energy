@@ -50,6 +50,9 @@ builder.Services.AddScoped<StatisticsService>();
 builder.Services.AddScoped<CardService>();
 builder.Services.AddScoped<ReadingService>();
 builder.Services.AddScoped<SimulationService>();
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<ReportService>();
+builder.Services.AddScoped<InvoiceService>();
 builder.Services.AddScoped<GoogleAuthService>();
 builder.Services.AddHttpClient();
 builder.Services.AddCors(o => o.AddPolicy("AllowAll",
@@ -96,6 +99,11 @@ using (var scope = app.Services.CreateScope())
             ("MonthKey", "INTEGER NOT NULL DEFAULT 0", "int NOT NULL DEFAULT 0"),
             ("MonthKwh", "REAL NOT NULL DEFAULT 0", "float NOT NULL DEFAULT 0"),
             ("CardCountersReady", "INTEGER NOT NULL DEFAULT 0", "bit NOT NULL DEFAULT 0"),
+            ("ReportWeekly", "INTEGER NOT NULL DEFAULT 0", "bit NOT NULL DEFAULT 0"),
+            ("ReportMonthly", "INTEGER NOT NULL DEFAULT 0", "bit NOT NULL DEFAULT 0"),
+            ("ReportLang", "TEXT NULL", "nvarchar(8) NULL"),
+            ("LastWeeklyReportAt", "TEXT NULL", "datetime2 NULL"),
+            ("LastMonthlyReportAt", "TEXT NULL", "datetime2 NULL"),
         };
         foreach (var col in userColumns)
         {

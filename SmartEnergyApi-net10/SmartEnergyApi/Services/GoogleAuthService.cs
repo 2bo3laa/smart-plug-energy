@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace SmartEnergyApi.Services;
 
-public record GoogleIdentity(string Sub, string Email);
+public record GoogleIdentity(string Sub, string Email, string? Name = null);
 
 /// <summary>
 /// Verifies a Google ID token (obtained by the mobile app through Google Sign-In) with Google's tokeninfo
@@ -43,7 +43,8 @@ public class GoogleAuthService
             var sub = Str("sub");
             var email = Str("email");
             if (sub == "" || email == "") return null;
-            return new GoogleIdentity(sub, email.ToLowerInvariant());
+            var name = Str("name");
+            return new GoogleIdentity(sub, email.ToLowerInvariant(), string.IsNullOrWhiteSpace(name) ? null : name);
         }
         catch
         {

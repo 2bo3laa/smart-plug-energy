@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' hide Text;
+import '../core/google.dart';
 import '../core/i18n.dart';
 import '../core/api.dart';
 import '../core/theme.dart';
@@ -18,6 +19,23 @@ class _SignupScreenState extends State<SignupScreen> {
   final _confirm = TextEditingController();
   bool _agree = true;
   bool _loading = false;
+  bool _gLoading = false;
+
+  /// One tap: signs in with Google; if there is no account for this Google user yet the server creates it.
+  Future<void> _google() async {
+    setState(() => _gLoading = true);
+    try {
+      final token = await GoogleAuth.idToken();
+      if (token == null) return; // cancelled
+      await Api.i.googleLogin(token);
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const Shell()), (_) => false);
+    } on ApiException catch (e) {
+      if (mounted) toast(context, e.message, error: true);
+    } finally {
+      if (mounted) setState(() => _gLoading = false);
+    }
+  }
 
   Future<void> _submit() async {
     final name = _name.text.trim();
@@ -92,6 +110,8 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             const SizedBox(height: 20),
             PrimaryButton('Create Account', onTap: _submit, loading: _loading),
+            const SizedBox(height: 10),
+            PrimaryButton('Sign up with Google', onTap: _google, loading: _gLoading, outline: true, icon: Icons.account_circle_outlined),
             const SizedBox(height: 16),
             Center(
               child: GestureDetector(
