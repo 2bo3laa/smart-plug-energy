@@ -1,0 +1,33 @@
+name: Send email reports
+
+# Runs by itself: every Sunday (weekly reports) and on the 1st of every month (monthly reports).
+# It only calls the server, which then e-mails the users who switched the reports on in Settings.
+on:
+  schedule:
+    - cron: '0 6 * * 0'
+    - cron: '0 6 1 * *'
+  workflow_dispatch:
+    inputs:
+      period:
+        description: "weekly or monthly"
+        required: true
+        default: "weekly"
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask the server to send the reports
+        env:
+          CRON_KEY: ${{ secrets.REPORTS_CRON_KEY }}
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
+          INPUT_PERIOD: ${{ github.event.inputs.period }}
+        run: |
+          PERIOD="$INPUT_PERIOD"
+          if [ -z "$PERIOD" ]; then
+            if [ "$EVENT_SCHEDULE" = "0 6 1 * *" ]; then PERIOD=monthly; else PERIOD=weekly; fi
+          fi
+          echo "Sending $PERIOD reports"
+          curl -fsS --max-time 180 --retry 2 --retry-delay 20 -X POST \
+            "http://smart-plug.runasp.net/api/reports/run?period=$PERIOD" \
+            -H "X-Cron-Key: $CRON_KEY"

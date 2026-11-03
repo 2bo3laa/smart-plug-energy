@@ -23,7 +23,7 @@ jobs:
           sed -i 's#<title>smart_plug_app</title>#<title>Smart Energy</title>#' web/index.html || true
           sed -i 's#apple-mobile-web-app-title" content="smart_plug_app"#apple-mobile-web-app-title" content="Smart Energy"#' web/index.html || true
           flutter pub get
-          dart run flutter_launcher_icons -f flutter_launcher_icons-web.yaml || echo "Web icon generation skipped"
+          dart run flutter_launcher_icons -f icons_web.yaml || echo "Web icon generation skipped"
           flutter build web --release
 
       - name: Put web build inside the API (wwwroot)
