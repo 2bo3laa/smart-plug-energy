@@ -81,8 +81,8 @@ public class ReportsController : ControllerBase
         var now = DateTime.UtcNow;
 
         var users = monthly
-            ? await _db.Users.Where(u => u.ReportMonthly).ToListAsync()
-            : await _db.Users.Where(u => u.ReportWeekly).ToListAsync();
+            ? await _db.Users.Where(u => u.ReportMonthly && u.DeletedAt == null).ToListAsync()
+            : await _db.Users.Where(u => u.ReportWeekly && u.DeletedAt == null).ToListAsync();
 
         int sent = 0, skipped = 0, failed = 0;
         foreach (var u in users)

@@ -38,7 +38,7 @@ public class SimulationService
         try
         {
             var devices = await _db.Devices.Include(d => d.Thresholds)
-                .Where(d => d.UserId == userId && d.IsSimulated)
+                .Where(d => d.UserId == userId && d.IsSimulated && d.User!.DeletedAt == null)
                 .ToListAsync();
             if (devices.Count == 0) return;
 

@@ -10,6 +10,8 @@ namespace SmartEnergyApi.Services;
 ///   Gmail:  "Mail": { "User": "you@gmail.com", "Password": "<16-char app password>" }
 ///   Brevo:  "Mail": { "BrevoApiKey": "...", "From": "verified-sender@example.com" }   (HTTPS API, works where SMTP is blocked)
 /// </summary>
+public record EmailAttachment(string FileName, byte[] Content, string ContentType);
+
 public class EmailService
 {
     private readonly IHttpClientFactory _http;
@@ -30,7 +32,7 @@ public class EmailService
 
     public bool IsConfigured => _brevoKey != "" ? _from != "" : (_user != "" && _pass != "");
 
-    public async Task SendAsync(string to, string subject, string html)
+    public async Task SendAsync(string to, string subject, string html, EmailAttachment? attachment = null)
     {
         if (!IsConfigured) throw new InvalidOperationException("Email sending is not configured on the server");
 
@@ -46,8 +48,9 @@ public class EmailService
                     sender = new { name = _fromName, email = _from },
                     to = new[] { new { email = to } },
                     subject,
-                    htmlContent = html
-                }),
+                    htmlContent = html,
+                    attachment = attachment == null ? null : new[] { new { name = attachment.FileName, content = Convert.ToBase64String(attachment.Content) } }
+                }, new JsonSerializerOptions { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull }),
                 Encoding.UTF8, "application/json");
             var res = await client.SendAsync(req);
             if (!res.IsSuccessStatusCode)
@@ -71,6 +74,8 @@ public class EmailService
             SubjectEncoding = Encoding.UTF8
         };
         msg.To.Add(to);
+        using var ms = attachment == null ? null : new MemoryStream(attachment.Content);
+        if (attachment != null) msg.Attachments.Add(new Attachment(ms!, attachment.FileName, attachment.ContentType));
         await smtp.SendMailAsync(msg);
     }
 }

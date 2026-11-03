@@ -18,16 +18,18 @@ public class AuthController : ControllerBase
     private readonly TokenService _tokens;
     private readonly ILogger<AuthController> _logger;
     private readonly GoogleAuthService _google;
+    private readonly AccountService _accounts;
     private readonly bool _exposeResetCode;
     private readonly bool _seedDemo;
 
-    public AuthController(AppDbContext db, TokenService tokens, ILogger<AuthController> logger, GoogleAuthService google,
+    public AuthController(AppDbContext db, TokenService tokens, ILogger<AuthController> logger, GoogleAuthService google, AccountService accounts,
         IConfiguration config, IWebHostEnvironment env)
     {
         _db = db;
         _tokens = tokens;
         _logger = logger;
         _google = google;
+        _accounts = accounts;
         // The reset code is only returned to the client in Development or when Auth:ExposeResetCode=true
         // (demo only: there is no email provider, and returning it lets anyone reset any account).
         // Fake demo devices/alerts are NOT created for new accounts any more (Demo:SeedOnSignup=true brings them back).
@@ -36,6 +38,12 @@ public class AuthController : ControllerBase
     }
 
     private static PublicUserDto ToPublic(User u) => new(u.Id, u.Name, u.Email);
+
+    public const string ScheduledCode = "account_scheduled_for_deletion";
+
+    /// <summary>403 for an account that is waiting for its 30-day deletion: the only thing it can do is restore itself.</summary>
+    private IActionResult ScheduledForDeletion(User u, int status = StatusCodes.Status403Forbidden) =>
+        StatusCode(status, new { error = "Account scheduled for deletion", code = ScheduledCode, purgeAt = u.PurgeAt });
 
     [HttpPost("signup")]
     public async Task<IActionResult> Signup(SignupRequest req)
@@ -50,8 +58,16 @@ public class AuthController : ControllerBase
         }
 
         var email = req.Email.Trim().ToLowerInvariant();
-        if (await _db.Users.AnyAsync(u => u.Email == email))
+        var existing = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if (existing != null && existing.PurgeAt != null && existing.PurgeAt <= DateTime.UtcNow)
         {
+            // Its 30 days are over and the nightly wipe has not reached it yet: wipe it now so the e-mail can be used again.
+            await _accounts.PurgeAsync(existing.Id);
+            existing = null;
+        }
+        if (existing != null)
+        {
+            if (existing.IsScheduledForDeletion) return ScheduledForDeletion(existing, StatusCodes.Status409Conflict);
             return Conflict(new { error = "An account with this email already exists" });
         }
 
@@ -85,9 +101,78 @@ public class AuthController : ControllerBase
         {
             return Unauthorized(new { error = "Invalid email or password" });
         }
+        if (user.IsScheduledForDeletion)
+        {
+            if (user.PurgeAt <= DateTime.UtcNow) return Unauthorized(new { error = "Invalid email or password" });
+            return ScheduledForDeletion(user);   // the app offers "Restore account"
+        }
 
         var token = _tokens.CreateToken(user.Id);
         return Ok(new AuthResponse(token, ToPublic(user)));
+    }
+
+    // ---- Delete account (30-day restore window) ----
+
+    // POST /api/auth/delete-account  { email, password }
+    // Confirms with the e-mail and the password, then schedules the deletion: the account is blocked straight away
+    // and everything is wiped for good after DeletionGraceDays unless the user restores it first.
+    [Authorize]
+    [HttpPost("delete-account")]
+    public async Task<IActionResult> DeleteAccount(DeleteAccountRequest req)
+    {
+        if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
+        {
+            return BadRequest(new { error = "email and password are required" });
+        }
+        var user = await _db.Users.FindAsync(User.GetUserId());
+        if (user == null) return NotFound(new { error = "User not found" });
+        if (!string.Equals(req.Email.Trim(), user.Email, StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new { error = "The email does not match this account" });
+        }
+        if (!BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
+        {
+            return Unauthorized(new { error = "Password is incorrect" });
+        }
+
+        var now = DateTime.UtcNow;
+        user.DeletedAt = now;
+        user.PurgeAt = now.AddDays(AccountService.DeletionGraceDays);
+        user.PushToken = null;   // no phone notifications while the account is waiting for deletion
+        await _db.SaveChangesAsync();
+        return Ok(new { success = true, purgeAt = user.PurgeAt });
+    }
+
+    // POST /api/auth/restore-account  { email, password }  or  { idToken } (Google account)  -> signs the user back in
+    [HttpPost("restore-account")]
+    public async Task<IActionResult> RestoreAccount(RestoreAccountRequest req)
+    {
+        User? user = null;
+        if (!string.IsNullOrWhiteSpace(req.Email) && !string.IsNullOrWhiteSpace(req.Password))
+        {
+            var email = req.Email.Trim().ToLowerInvariant();
+            var found = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (found != null && BCrypt.Net.BCrypt.Verify(req.Password, found.PasswordHash)) user = found;
+        }
+        else if (!string.IsNullOrWhiteSpace(req.IdToken))
+        {
+            if (!_google.IsConfigured) return StatusCode(503, new { error = "Google sign-in is not configured on the server" });
+            var identity = await _google.VerifyAsync(req.IdToken);
+            if (identity != null) user = await _db.Users.FirstOrDefaultAsync(u => u.GoogleId == identity.Sub);
+        }
+        else
+        {
+            return BadRequest(new { error = "email and password are required" });
+        }
+        if (user == null) return Unauthorized(new { error = "Invalid email or password" });
+
+        if (!user.IsScheduledForDeletion) return BadRequest(new { error = "This account is not scheduled for deletion" });
+        if (user.PurgeAt <= DateTime.UtcNow) return StatusCode(StatusCodes.Status410Gone, new { error = "The 30-day restore period has ended" });
+
+        user.DeletedAt = null;
+        user.PurgeAt = null;
+        await _db.SaveChangesAsync();
+        return Ok(new AuthResponse(_tokens.CreateToken(user.Id), ToPublic(user)));
     }
 
     [Authorize]
@@ -235,6 +320,7 @@ public class AuthController : ControllerBase
             // Google already verified this e-mail address. If an account with it exists, link it and sign in;
             // otherwise this is a new user: create the account right away (one-tap sign-up).
             user = await _db.Users.FirstOrDefaultAsync(u => u.Email == identity.Email);
+            if (user != null && user.IsScheduledForDeletion) return ScheduledForDeletion(user);
             if (user != null)
             {
                 user.GoogleId = identity.Sub;
@@ -256,6 +342,11 @@ public class AuthController : ControllerBase
                 await _db.SaveChangesAsync();
                 if (_seedDemo) SeedData.SeedForUser(_db, user.Id);
             }
+        }
+        if (user.IsScheduledForDeletion)
+        {
+            if (user.PurgeAt <= DateTime.UtcNow) return Unauthorized(new { error = "Could not verify the Google account" });
+            return ScheduledForDeletion(user);
         }
         return Ok(new AuthResponse(_tokens.CreateToken(user.Id), ToPublic(user)));
     }

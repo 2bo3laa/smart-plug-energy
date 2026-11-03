@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
     public DbSet<ApplianceType> ApplianceTypes => Set<ApplianceType>();
     public DbSet<CatalogItem> CatalogItems => Set<CatalogItem>();
+    public DbSet<Backup> Backups => Set<Backup>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -69,6 +70,13 @@ public class AppDbContext : DbContext
             .WithMany(d => d.Alerts)
             .HasForeignKey(a => a.DeviceId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Backup>()
+            .HasOne(b => b.User)
+            .WithMany()
+            .HasForeignKey(b => b.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Backup>().HasIndex(b => new { b.UserId, b.CreatedAt });
 
         modelBuilder.Entity<PasswordReset>()
             .HasOne(p => p.User)

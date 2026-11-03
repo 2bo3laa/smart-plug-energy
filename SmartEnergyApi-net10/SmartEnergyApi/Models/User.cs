@@ -52,6 +52,14 @@ public class User
     [MaxLength(64)] public string? GoogleId { get; set; }
     [MaxLength(180)] public string? GoogleEmail { get; set; }
 
+    // ---- Account deletion with a 30-day restore window ----
+    /// <summary>When the user asked to delete the account. Null = the account is active.</summary>
+    public DateTime? DeletedAt { get; set; }
+    /// <summary>When all of the account's data is wiped for good (DeletedAt + 30 days). Restoring before then clears both.</summary>
+    public DateTime? PurgeAt { get; set; }
+
+    public bool IsScheduledForDeletion => DeletedAt != null;
+
     public List<Device> Devices { get; set; } = new();
     public List<Alert> Alerts { get; set; } = new();
 }
