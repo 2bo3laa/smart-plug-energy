@@ -41,6 +41,10 @@ public class User
     public bool ReportWeekly { get; set; }
     public bool ReportMonthly { get; set; }
     [MaxLength(8)] public string? ReportLang { get; set; }
+
+    // ---- Phone notifications (Firebase Cloud Messaging) ----
+    [MaxLength(400)] public string? PushToken { get; set; }
+    [MaxLength(8)] public string? PushLang { get; set; }
     public DateTime? LastWeeklyReportAt { get; set; }
     public DateTime? LastMonthlyReportAt { get; set; }
 

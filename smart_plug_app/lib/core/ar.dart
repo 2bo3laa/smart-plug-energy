@@ -365,4 +365,12 @@ const Map<String, String> kAr = {
   'Invoice sent. Check your inbox.': 'تم إرسال الفاتورة. راجع بريدك.',
   'No consumption in this period yet.': 'لا يوجد استهلاك في هذه الفترة بعد.',
   'Weekly or monthly bill for all devices': 'فاتورة أسبوعية أو شهرية لكل الأجهزة',
+
+  // --- phone notifications ---
+  'Test phone notification': 'تجربة إشعار على التليفون',
+  'Phone notifications are not enabled in this build': 'إشعارات التليفون غير مفعّلة في هذه النسخة',
+  'Test sent. Check your notification bar.': 'تم إرسال إشعار تجريبي. شوف شريط الإشعارات.',
+  'Push notifications are not configured on the server': 'إشعارات التليفون غير مفعّلة على السيرفر',
+  'No phone is registered yet. Allow notifications in the app and try again.': 'لا يوجد تليفون مسجّل بعد. اسمح بالإشعارات من التطبيق وجرّب تاني.',
+  'This phone is no longer registered. Open the app again and retry.': 'هذا التليفون لم يعد مسجّلاً. افتح التطبيق تاني وأعد المحاولة.',
 };

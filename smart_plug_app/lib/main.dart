@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/api.dart';
 import 'core/i18n.dart';
+import 'core/push.dart';
 import 'core/theme.dart';
 import 'screens/splash.dart';
 
@@ -16,6 +17,7 @@ Future<void> main() async {
   ));
   await Api.i.init();
   await Lang.i.init();
+  Push.init().then((_) => Push.registerForUser()); // phone notifications (does not delay start-up)
   runApp(const SmartPlugApp());
 }
 
@@ -26,6 +28,7 @@ class SmartPlugApp extends StatelessWidget {
         animation: Lang.i,
         builder: (_, __) => MaterialApp(
           title: 'Smart Plug',
+          navigatorKey: Push.navKey,
           debugShowCheckedModeBanner: false,
           theme: buildTheme(),
           locale: Lang.i.locale,

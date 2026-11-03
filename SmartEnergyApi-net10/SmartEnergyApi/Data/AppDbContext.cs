@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SmartEnergyApi.Models;
+using SmartEnergyApi.Services;
 
 namespace SmartEnergyApi.Data;
 
@@ -74,5 +75,17 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+    }
+
+    /// <summary>After new alerts are saved, push them to the user's phone (best effort, in the background).</summary>
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var added = ChangeTracker.Entries<Alert>().Where(e => e.State == EntityState.Added).Select(e => e.Entity).ToList();
+        var result = await base.SaveChangesAsync(cancellationToken);
+        if (added.Count > 0)
+        {
+            PushDispatcher.Dispatch(added.Select(a => new PushItem(a.Id, a.UserId, a.DeviceId, a.Type, a.Title, a.Message)).ToList());
+        }
+        return result;
     }
 }

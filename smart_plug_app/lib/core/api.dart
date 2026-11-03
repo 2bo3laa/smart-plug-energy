@@ -1,3 +1,4 @@
+import 'push.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
@@ -62,6 +63,7 @@ class Api {
     user = u;
     await _prefs.setString('token', t);
     await _prefs.setString('user', jsonEncode({'id': u.id, 'name': u.name, 'email': u.email}));
+    Push.registerForUser(); // phone notifications for this account (no-op when the build has no Firebase)
   }
 
   Future<void> logout() async {
@@ -237,6 +239,11 @@ class Api {
   }
 
   Future<void> unlinkGoogle() => _send('DELETE', '/auth/google-link');
+
+  // ---- phone notifications ----
+  Future<void> registerPush(String token, String lang) => _send('POST', '/push/register', {'token': token, 'lang': lang});
+  Future<void> unregisterPush() => _send('DELETE', '/push/register');
+  Future<void> testPush() => _send('POST', '/push/test');
 
   // ---- estimated invoice ----
   Future<Invoice> invoice(String period, {int? deviceId}) async =>

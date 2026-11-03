@@ -8,6 +8,7 @@ import 'alerts.dart';
 import 'login.dart';
 import 'tariff.dart';
 import 'reports.dart';
+import '../core/push.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -119,7 +120,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       );
 
+  Future<void> _testPush() async {
+    if (!Push.ready) {
+      toast(context, 'Phone notifications are not enabled in this build', error: true);
+      return;
+    }
+    try {
+      await Push.registerForUser();
+      await Api.i.testPush();
+      if (mounted) toast(context, 'Test sent. Check your notification bar.');
+    } on ApiException catch (e) {
+      if (mounted) toast(context, e.message, error: true);
+    }
+  }
+
   Future<void> _logout() async {
+    await Push.unregister();
     await Api.i.logout();
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const LoginScreen()), (_) => false);
@@ -159,6 +175,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ]),
         const SizedBox(height: 18),
         _item(Icons.person_outline_rounded, C.blue, 'Account Settings', onTap: _openAccount),
+        _item(Icons.notifications_active_outlined, C.green, 'Test phone notification', onTap: _testPush),
         _item(Icons.notifications_none_rounded, C.amber, 'Notifications', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AlertsScreen()))),
         _item(Icons.mail_outline_rounded, C.blue, 'Email Reports', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportsScreen()))),
         _item(Icons.receipt_long_outlined, C.green, 'Electricity Tariff', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TariffScreen()))),

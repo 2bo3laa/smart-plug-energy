@@ -10,7 +10,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Optional private settings file, created once on the server and never committed to GitHub, e.g.
 // { "Jwt": { "Secret": "a-long-random-string" }, "Auth": { "ExposeResetCode": false }, "Google": { "ClientIds": "..." } }
 // Re-publishing the API does not overwrite it because it is not part of the published files.
-builder.Configuration.AddJsonFile("secrets.local.json", optional: true, reloadOnChange: false);
+// Looked for in every folder the host might call "the app folder" (they can differ on shared hosting), and reloaded live
+// when the file changes, so editing it on the server takes effect without a restart.
+foreach (var dir in new[] { AppContext.BaseDirectory, builder.Environment.ContentRootPath, Directory.GetCurrentDirectory() }
+             .Where(d => !string.IsNullOrEmpty(d)).Distinct(StringComparer.OrdinalIgnoreCase))
+{
+    builder.Configuration.AddJsonFile(Path.Combine(dir, "secrets.local.json"), optional: true, reloadOnChange: true);
+}
 
 // 1. Configure Database Context based on Provider in appsettings.json
 var provider = builder.Configuration["Database:Provider"] ?? "Sqlite";
@@ -53,6 +59,7 @@ builder.Services.AddScoped<SimulationService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<InvoiceService>();
+builder.Services.AddSingleton<PushService>();
 builder.Services.AddScoped<GoogleAuthService>();
 builder.Services.AddHttpClient();
 builder.Services.AddCors(o => o.AddPolicy("AllowAll",
@@ -61,6 +68,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+// Lets the DbContext hand freshly saved alerts to the phone-notification sender.
+PushDispatcher.Scopes = app.Services.GetRequiredService<IServiceScopeFactory>();
+PushDispatcher.Push = app.Services.GetRequiredService<PushService>();
 
 if (jwtSecret.StartsWith("CHANGE_ME", StringComparison.OrdinalIgnoreCase))
 {
@@ -102,6 +113,8 @@ using (var scope = app.Services.CreateScope())
             ("ReportWeekly", "INTEGER NOT NULL DEFAULT 0", "bit NOT NULL DEFAULT 0"),
             ("ReportMonthly", "INTEGER NOT NULL DEFAULT 0", "bit NOT NULL DEFAULT 0"),
             ("ReportLang", "TEXT NULL", "nvarchar(8) NULL"),
+            ("PushToken", "TEXT NULL", "nvarchar(400) NULL"),
+            ("PushLang", "TEXT NULL", "nvarchar(8) NULL"),
             ("LastWeeklyReportAt", "TEXT NULL", "datetime2 NULL"),
             ("LastMonthlyReportAt", "TEXT NULL", "datetime2 NULL"),
         };
@@ -164,6 +177,22 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok("ok"));
+
+// Safe diagnostics (no secret values): shows whether the private settings file was found and which features are configured.
+app.MapGet("/api/diagnostics", (IWebHostEnvironment env, IConfiguration cfg, GoogleAuthService google, EmailService mail) => Results.Ok(new
+{
+    baseDirectory = AppContext.BaseDirectory,
+    contentRoot = env.ContentRootPath,
+    currentDirectory = Directory.GetCurrentDirectory(),
+    secretsFileInBaseDirectory = File.Exists(Path.Combine(AppContext.BaseDirectory, "secrets.local.json")),
+    secretsFileInContentRoot = File.Exists(Path.Combine(env.ContentRootPath, "secrets.local.json")),
+    googleConfigured = google.IsConfigured,
+    mailConfigured = mail.IsConfigured,
+    pushConfigured = app.Services.GetRequiredService<PushService>().IsConfigured,
+    jwtSecretIsDefault = (cfg["Jwt:Secret"] ?? "").StartsWith("CHANGE_ME", StringComparison.OrdinalIgnoreCase),
+    reportsCronKeySet = !string.IsNullOrEmpty(cfg["Reports:CronKey"]),
+    jsonFilesNextToTheApp = Directory.GetFiles(AppContext.BaseDirectory, "*.json*").Select(f => Path.GetFileName(f)).ToArray()
+}));
 app.MapControllers();
 
 app.Run();
