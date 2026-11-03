@@ -17,7 +17,7 @@ class Push {
     try {
       await Firebase.initializeApp();
       _ready = true;
-      FirebaseMessaging.onTokenRefresh.listen(_register);
+      FirebaseMessaging.instance.onTokenRefresh.listen(_register);
       // Tapping a notification while the app is in the background.
       FirebaseMessaging.onMessageOpenedApp.listen((_) => _openAlerts());
       // Tapping a notification while the app was closed.
