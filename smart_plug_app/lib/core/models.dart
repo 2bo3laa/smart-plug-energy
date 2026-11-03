@@ -281,3 +281,28 @@ class Invoice {
         bands: ((j['bands'] ?? []) as List).map((e) => InvoiceBand.fromJson(e)).toList(),
       );
 }
+
+
+class BackupItem {
+  final int id, devices, schedules, sizeBytes;
+  /// manual | auto | import | before_restore
+  final String kind;
+  final DateTime createdAt;
+  BackupItem(this.id, this.kind, this.createdAt, this.devices, this.schedules, this.sizeBytes);
+  factory BackupItem.fromJson(Map<String, dynamic> j) => BackupItem(
+        j['id'],
+        j['kind'] ?? 'manual',
+        DateTime.parse(j['createdAt'].toString().endsWith('Z') ? j['createdAt'] : '${j['createdAt']}Z').toLocal(),
+        j['devices'] ?? 0,
+        j['schedules'] ?? 0,
+        j['sizeBytes'] ?? 0,
+      );
+}
+
+class BackupList {
+  final List<BackupItem> items;
+  final int max;
+  BackupList(this.items, this.max);
+  factory BackupList.fromJson(Map<String, dynamic> j) =>
+      BackupList(((j['backups'] ?? []) as List).map((e) => BackupItem.fromJson(e)).toList(), j['max'] ?? 5);
+}

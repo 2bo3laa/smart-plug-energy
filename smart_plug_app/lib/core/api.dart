@@ -8,7 +8,12 @@ import 'models.dart';
 class ApiException implements Exception {
   final String message;
   final int? status;
-  ApiException(this.message, [this.status]);
+  /// Machine-readable reason sent by the server, e.g. 'account_scheduled_for_deletion'.
+  final String? code;
+  /// For 'account_scheduled_for_deletion': when the account is wiped for good (UTC).
+  final DateTime? purgeAt;
+  ApiException(this.message, [this.status, this.code, this.purgeAt]);
+  bool get isScheduledForDeletion => code == 'account_scheduled_for_deletion';
   @override
   String toString() => message;
 }
@@ -115,7 +120,13 @@ class Api {
       throw ApiException('Session expired. Please log in again.', 401);
     }
     final msg = (data is Map && data['error'] != null) ? data['error'].toString() : 'Request failed (${res.statusCode})';
-    throw ApiException(msg, res.statusCode);
+    final code = data is Map ? data['code']?.toString() : null;
+    final purgeAt = data is Map && data['purgeAt'] != null ? DateTime.tryParse(data['purgeAt'].toString())?.toLocal() : null;
+    // A signed-in session whose account was deleted meanwhile (e.g. from another phone): sign out here too.
+    if (res.statusCode == 403 && code == 'account_scheduled_for_deletion' && token != null) {
+      await logout();
+    }
+    throw ApiException(msg, res.statusCode, code, purgeAt);
   }
 
   // ---- auth ----
@@ -140,6 +151,33 @@ class Api {
 
   Future<void> resetPassword(String email, String code, String pass) =>
       _send('POST', '/auth/reset-password', {'email': email, 'code': code, 'newPassword': pass});
+
+  // ---- delete account (30-day restore window) ----
+  /// Schedules the deletion and signs out on this phone. Throws if the e-mail or password is wrong.
+  Future<DateTime?> deleteAccount(String email, String password) async {
+    final d = await _send('POST', '/auth/delete-account', {'email': email, 'password': password});
+    await logout();
+    return d is Map && d['purgeAt'] != null ? DateTime.tryParse(d['purgeAt'].toString())?.toLocal() : null;
+  }
+
+  /// Restores an account that is waiting for deletion and signs in.
+  Future<void> restoreAccount(String email, String password) async {
+    final d = await _send('POST', '/auth/restore-account', {'email': email, 'password': password});
+    await _saveSession(d['token'], User.fromJson(d['user']));
+  }
+
+  Future<void> restoreAccountWithGoogle(String idToken) async {
+    final d = await _send('POST', '/auth/restore-account', {'idToken': idToken});
+    await _saveSession(d['token'], User.fromJson(d['user']));
+  }
+
+  // ---- backups ----
+  Future<BackupList> backups() async => BackupList.fromJson(await _send('GET', '/backups'));
+  Future<void> createBackup() => _send('POST', '/backups');
+  Future<void> restoreBackup(int id) => _send('POST', '/backups/$id/restore');
+  Future<String> backupText(int id) async => (await _send('GET', '/backups/$id/text'))['text'].toString();
+  Future<void> emailBackup(int id, String lang) => _send('POST', '/backups/$id/email', {'lang': lang});
+  Future<void> importBackup(String text) => _send('POST', '/backups/import', {'text': text});
 
   // ---- devices ----
   Future<DeviceList> devices() async => DeviceList.fromJson(await _send('GET', '/devices'));

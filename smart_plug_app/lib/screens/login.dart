@@ -36,6 +36,44 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _pull = 0);
   }
 
+  static String _date(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  /// The account was deleted less than 30 days ago: offer to bring it back (it is the only thing such an account can do).
+  Future<void> _offerRestore(ApiException e, {String? email, String? password, String? googleToken}) async {
+    final d = e.purgeAt;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        backgroundColor: C.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Account scheduled for deletion', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+        content: Text(
+          d == null
+              ? 'This account is scheduled for deletion. Do you want to restore it?'
+              : tf('This account will be deleted permanently on {date}. Do you want to restore it?', {'date': _date(d)}),
+          style: const TextStyle(color: C.text2, fontSize: 13, height: 1.5),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel', style: TextStyle(color: C.text2))),
+          TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Restore account')),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    try {
+      if (googleToken != null) {
+        await Api.i.restoreAccountWithGoogle(googleToken);
+      } else {
+        await Api.i.restoreAccount(email!, password!);
+      }
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const Shell()), (_) => false);
+    } on ApiException catch (ex) {
+      if (mounted) toast(context, ex.message, error: true);
+    }
+  }
+
   Future<void> _login() async {
     final email = _email.text.trim();
     final pass = _pass.text;
@@ -49,7 +87,12 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const Shell()), (_) => false);
     } on ApiException catch (e) {
-      if (mounted) toast(context, e.message, error: true);
+      if (!mounted) return;
+      if (e.isScheduledForDeletion) {
+        await _offerRestore(e, email: email, password: pass);
+      } else {
+        toast(context, e.message, error: true);
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -57,14 +100,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _google() async {
     setState(() => _gLoading = true);
+    String? googleToken;
     try {
-      final token = await GoogleAuth.idToken();
-      if (token == null) return; // cancelled
-      await Api.i.googleLogin(token);
+      googleToken = await GoogleAuth.idToken();
+      if (googleToken == null) return; // cancelled
+      await Api.i.googleLogin(googleToken);
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const Shell()), (_) => false);
     } on ApiException catch (e) {
-      if (mounted) toast(context, e.message, error: true);
+      if (!mounted) return;
+      if (e.isScheduledForDeletion && googleToken != null) {
+        await _offerRestore(e, googleToken: googleToken);
+      } else {
+        toast(context, e.message, error: true);
+      }
     } finally {
       if (mounted) setState(() => _gLoading = false);
     }

@@ -4,6 +4,7 @@ import '../core/google.dart';
 import '../core/i18n.dart';
 import '../core/theme.dart';
 import '../widgets/common.dart';
+import 'login.dart';
 
 /// Account settings: name, change password, and linking a Google account.
 class AccountScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _AccountScreenState extends State<AccountScreen> {
   final _confirm = TextEditingController();
   String? _googleEmail;
   bool _loadedGoogle = false;
-  bool _savingName = false, _savingPass = false, _googleBusy = false;
+  bool _savingName = false, _savingPass = false, _googleBusy = false, _deleting = false;
 
   @override
   void initState() {
@@ -131,6 +132,73 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
+  static String _date(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  /// Delete the account: the user retypes the e-mail and the password. It is wiped for good after 30 days unless restored.
+  Future<void> _deleteAccount() async {
+    final email = TextEditingController();
+    final pass = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        backgroundColor: C.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Delete your account?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+        content: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text(
+              'Your account will be closed now and all its data (devices, readings, schedules, backups) is deleted permanently after 30 days. Sign in again within 30 days to restore it.',
+              style: TextStyle(color: C.text2, fontSize: 12.5, height: 1.5),
+            ),
+            const SizedBox(height: 16),
+            Field(label: 'Email', hint: 'Enter Email', controller: email, keyboard: TextInputType.emailAddress),
+            Field(label: 'Password', hint: 'Enter Password', controller: pass, obscure: true),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel', style: TextStyle(color: C.text2))),
+          TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete Account', style: TextStyle(color: C.red))),
+        ],
+      ),
+    );
+    final e = email.text.trim(), p = pass.text;
+    email.dispose();
+    pass.dispose();
+    if (ok != true) return;
+    if (e.isEmpty || p.isEmpty) {
+      toast(context, 'Enter your email and password', error: true);
+      return;
+    }
+    setState(() => _deleting = true);
+    try {
+      final purge = await Api.i.deleteAccount(e, p);
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (c) => AlertDialog(
+          backgroundColor: C.card,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Account scheduled for deletion', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+          content: Text(
+            purge == null
+                ? 'Sign in again within 30 days to restore your account.'
+                : tf('Your data will be deleted permanently on {date}. Sign in again before then to restore your account.', {'date': _date(purge)}),
+            style: const TextStyle(color: C.text2, fontSize: 13, height: 1.5),
+          ),
+          actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
+        ),
+      );
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const LoginScreen()), (_) => false);
+    } on ApiException catch (ex) {
+      if (mounted) toast(context, ex.message, error: true);
+    } finally {
+      if (mounted) setState(() => _deleting = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final u = Api.i.user;
@@ -197,6 +265,26 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
             const SizedBox(height: 10),
             const Text('Link your Google account to sign in with one tap from the login screen.', style: TextStyle(fontSize: 11, color: C.text3, height: 1.5)),
+            const SizedBox(height: 26),
+            const SectionLabel('Delete Account'),
+            const Text('You can restore a deleted account for 30 days. After that everything is removed for good.', style: TextStyle(fontSize: 11.5, color: C.text2, height: 1.5)),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: _deleting ? null : _deleteAccount,
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(color: C.dim(C.red), borderRadius: BorderRadius.circular(14)),
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  if (_deleting)
+                    const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: C.red))
+                  else ...[
+                    const Icon(Icons.delete_outline_rounded, size: 17, color: C.red),
+                    const SizedBox(width: 8),
+                    const Text('Delete Account', style: TextStyle(color: C.red, fontWeight: FontWeight.w700, fontSize: 13.5)),
+                  ],
+                ]),
+              ),
+            ),
           ]),
         ),
       ),
