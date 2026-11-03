@@ -1,0 +1,20 @@
+name: Server maintenance
+
+# Runs every day: wipes accounts whose 30-day restore window is over and takes the weekly automatic backups.
+# The server also does this by itself every hour while it is awake; this call makes sure it happens on hosts that put the app to sleep.
+on:
+  schedule:
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask the server to run its maintenance
+        env:
+          CRON_KEY: ${{ secrets.REPORTS_CRON_KEY }}
+        run: |
+          curl -fsS --max-time 180 --retry 2 --retry-delay 20 -X POST \
+            "http://smart-plug.runasp.net/api/maintenance/run" \
+            -H "X-Cron-Key: $CRON_KEY"
