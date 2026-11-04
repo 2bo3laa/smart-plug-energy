@@ -125,6 +125,9 @@ using (var scope = app.Services.CreateScope())
             // Account deletion with a 30-day restore window.
             ("DeletedAt", "TEXT NULL", "datetime2 NULL"),
             ("PurgeAt", "TEXT NULL", "datetime2 NULL"),
+            ("DeleteCodeHash", "TEXT NULL", "nvarchar(100) NULL"),
+            ("DeleteCodeExpiresAt", "TEXT NULL", "datetime2 NULL"),
+            ("DeleteCodeAttempts", "INTEGER NOT NULL DEFAULT 0", "int NOT NULL DEFAULT 0"),
         };
         foreach (var col in userColumns)
         {

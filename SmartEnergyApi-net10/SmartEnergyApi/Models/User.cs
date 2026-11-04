@@ -60,6 +60,11 @@ public class User
 
     public bool IsScheduledForDeletion => DeletedAt != null;
 
+    // One-time code e-mailed to confirm the deletion (for accounts that use Google and have no password to type).
+    public string? DeleteCodeHash { get; set; }
+    public DateTime? DeleteCodeExpiresAt { get; set; }
+    public int DeleteCodeAttempts { get; set; }
+
     public List<Device> Devices { get; set; } = new();
     public List<Alert> Alerts { get; set; } = new();
 }

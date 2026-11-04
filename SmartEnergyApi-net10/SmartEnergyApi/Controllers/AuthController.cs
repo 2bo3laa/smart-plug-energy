@@ -13,16 +13,19 @@ namespace SmartEnergyApi.Controllers;
 public class AuthController : ControllerBase
 {
     private const int ResetCodeTtlMinutes = 15;
+    private const int DeleteCodeTtlMinutes = 10;
+    private const int DeleteCodeMaxAttempts = 5;
 
     private readonly AppDbContext _db;
     private readonly TokenService _tokens;
     private readonly ILogger<AuthController> _logger;
     private readonly GoogleAuthService _google;
     private readonly AccountService _accounts;
+    private readonly EmailService _email;
     private readonly bool _exposeResetCode;
     private readonly bool _seedDemo;
 
-    public AuthController(AppDbContext db, TokenService tokens, ILogger<AuthController> logger, GoogleAuthService google, AccountService accounts,
+    public AuthController(AppDbContext db, TokenService tokens, ILogger<AuthController> logger, GoogleAuthService google, AccountService accounts, EmailService email,
         IConfiguration config, IWebHostEnvironment env)
     {
         _db = db;
@@ -30,6 +33,7 @@ public class AuthController : ControllerBase
         _logger = logger;
         _google = google;
         _accounts = accounts;
+        _email = email;
         // The reset code is only returned to the client in Development or when Auth:ExposeResetCode=true
         // (demo only: there is no email provider, and returning it lets anyone reset any account).
         // Fake demo devices/alerts are NOT created for new accounts any more (Demo:SeedOnSignup=true brings them back).
@@ -113,6 +117,47 @@ public class AuthController : ControllerBase
 
     // ---- Delete account (30-day restore window) ----
 
+    // POST /api/auth/delete-account/send-code  { lang }
+    // E-mails a 6-digit code (valid 10 minutes) to the account address. Use it in delete-account instead of the password.
+    [Authorize]
+    [HttpPost("delete-account/send-code")]
+    public async Task<IActionResult> SendDeleteCode(DeleteCodeRequest? req)
+    {
+        if (!_email.IsConfigured) return StatusCode(503, new { error = "Email sending is not configured on the server" });
+        var user = await _db.Users.FindAsync(User.GetUserId());
+        if (user == null) return NotFound(new { error = "User not found" });
+
+        // One code per minute.
+        if (user.DeleteCodeExpiresAt != null && user.DeleteCodeExpiresAt.Value.AddMinutes(-DeleteCodeTtlMinutes).AddMinutes(1) > DateTime.UtcNow)
+        {
+            return StatusCode(429, new { error = "Please wait a minute before asking for another code" });
+        }
+
+        var code = System.Security.Cryptography.RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+        user.DeleteCodeHash = BCrypt.Net.BCrypt.HashPassword(code, workFactor: 10);
+        user.DeleteCodeExpiresAt = DateTime.UtcNow.AddMinutes(DeleteCodeTtlMinutes);
+        user.DeleteCodeAttempts = 0;
+        await _db.SaveChangesAsync();
+
+        var ar = req?.Lang == "ar";
+        var subject = ar ? "كود تأكيد حذف الحساب" : "Your account deletion code";
+        var html = ar
+            ? $"<div dir=\"rtl\" style=\"font-family:Arial,sans-serif\"><p>كود تأكيد حذف حسابك في Smart Energy:</p><p style=\"font-size:28px;font-weight:bold;letter-spacing:4px\">{code}</p><p>الكود صالح لمدة {DeleteCodeTtlMinutes} دقايق. لو إنت مطلبتش حذف الحساب تجاهل الرسالة وغيّر كلمة السر.</p></div>"
+            : $"<div style=\"font-family:Arial,sans-serif\"><p>Your Smart Energy account deletion code:</p><p style=\"font-size:28px;font-weight:bold;letter-spacing:4px\">{code}</p><p>It is valid for {DeleteCodeTtlMinutes} minutes. If you did not ask to delete your account, ignore this message and change your password.</p></div>";
+        try
+        {
+            await _email.SendAsync(user.Email, subject, html);
+        }
+        catch (Exception ex)
+        {
+            user.DeleteCodeHash = null;
+            user.DeleteCodeExpiresAt = null;
+            await _db.SaveChangesAsync();
+            return StatusCode(502, new { error = "Could not send the email: " + ex.Message });
+        }
+        return Ok(new { message = "Code sent", expiresInMinutes = DeleteCodeTtlMinutes });
+    }
+
     // POST /api/auth/delete-account  { email, password }
     // Confirms with the e-mail and the password, then schedules the deletion: the account is blocked straight away
     // and everything is wiped for good after DeletionGraceDays unless the user restores it first.
@@ -120,19 +165,41 @@ public class AuthController : ControllerBase
     [HttpPost("delete-account")]
     public async Task<IActionResult> DeleteAccount(DeleteAccountRequest req)
     {
-        if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
-        {
-            return BadRequest(new { error = "email and password are required" });
-        }
         var user = await _db.Users.FindAsync(User.GetUserId());
         if (user == null) return NotFound(new { error = "User not found" });
-        if (!string.Equals(req.Email.Trim(), user.Email, StringComparison.OrdinalIgnoreCase))
+
+        if (!string.IsNullOrWhiteSpace(req.Code))
         {
-            return BadRequest(new { error = "The email does not match this account" });
+            // Confirmed with the one-time code that was e-mailed to the account (see send-code): no password needed.
+            if (user.DeleteCodeHash == null || user.DeleteCodeExpiresAt == null || user.DeleteCodeExpiresAt < DateTime.UtcNow
+                || user.DeleteCodeAttempts >= DeleteCodeMaxAttempts)
+            {
+                return BadRequest(new { error = "Invalid or expired code" });
+            }
+            if (!BCrypt.Net.BCrypt.Verify(req.Code.Trim(), user.DeleteCodeHash))
+            {
+                user.DeleteCodeAttempts++;
+                await _db.SaveChangesAsync();
+                return BadRequest(new { error = "Invalid or expired code" });
+            }
+            user.DeleteCodeHash = null;
+            user.DeleteCodeExpiresAt = null;
+            user.DeleteCodeAttempts = 0;
         }
-        if (!BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
+        else
         {
-            return Unauthorized(new { error = "Password is incorrect" });
+            if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
+            {
+                return BadRequest(new { error = "email and password are required" });
+            }
+            if (!string.Equals(req.Email.Trim(), user.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { error = "The email does not match this account" });
+            }
+            if (!BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
+            {
+                return Unauthorized(new { error = "Password is incorrect" });
+            }
         }
 
         var now = DateTime.UtcNow;
@@ -225,9 +292,30 @@ public class AuthController : ControllerBase
         _db.PasswordResets.Add(reset);
         await _db.SaveChangesAsync();
 
-        // NOTE: no email/SMS provider is wired up yet - the code is only logged here.
-        // Hook up a real provider (SendGrid, Twilio, ...) before shipping this to real
-        // users, and drop `devCode` from the response below once you do.
+        // E-mail the code (Arabic and English in one message). If sending fails the response stays the same, so nothing leaks.
+        if (_email.IsConfigured)
+        {
+            var html =
+                $"<div style=\"font-family:Arial,sans-serif\"><p>Your Smart Energy password reset code:</p>" +
+                $"<p style=\"font-size:28px;font-weight:bold;letter-spacing:4px\">{code}</p>" +
+                $"<p>It is valid for {ResetCodeTtlMinutes} minutes. If you did not ask for it, ignore this message.</p>" +
+                $"<hr><div dir=\"rtl\"><p>كود إعادة تعيين كلمة السر في Smart Energy:</p>" +
+                $"<p style=\"font-size:28px;font-weight:bold;letter-spacing:4px\">{code}</p>" +
+                $"<p>الكود صالح لمدة {ResetCodeTtlMinutes} دقيقة. لو إنت مطلبتوش تجاهل الرسالة.</p></div></div>";
+            try
+            {
+                await _email.SendAsync(user.Email, "Password reset code · كود إعادة تعيين كلمة السر", html);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not e-mail the password reset code to {Email}", user.Email);
+            }
+        }
+        else
+        {
+            _logger.LogWarning("Mail is not configured: the password reset code was not sent to {Email}", user.Email);
+        }
+
         const string msg = "If an account with this email exists, a reset code has been sent.";
         if (!_exposeResetCode) return Ok(new { message = msg });
 
