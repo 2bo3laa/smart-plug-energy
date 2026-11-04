@@ -118,7 +118,7 @@ public class PushService
                     token = deviceToken,
                     notification = new { title, body },
                     data,
-                    android = new { priority = "HIGH", notification = new { sound = "default" } }
+                    android = new { priority = "HIGH", notification = new { sound = "default", channel_id = "smart_plug_alerts" } }
                 }
             };
             using var req = new HttpRequestMessage(HttpMethod.Post, "https://fcm.googleapis.com/v1/projects/" + _projectId + "/messages:send");

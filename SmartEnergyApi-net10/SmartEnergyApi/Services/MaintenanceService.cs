@@ -37,8 +37,12 @@ public class MaintenanceService
     }
 }
 
-/// <summary>Runs MaintenanceService shortly after start and then every hour while the app is awake.
-/// (On hosts that put the app to sleep, the scheduled GitHub workflow calls /api/maintenance/run as well.)</summary>
+/// <summary>
+/// Background loop on the server. Every 5 minutes it advances the virtual plugs (devices without real hardware) of every active user,
+/// so readings, the card balance, alerts and phone notifications keep coming even when the app is closed.
+/// Once an hour it also runs MaintenanceService. (On hosts that put the app to sleep, the scheduled GitHub workflow calls
+/// /api/maintenance/run as well.) Real ESP32 plugs need none of this: they post their readings to the server themselves.
+/// </summary>
 public class MaintenanceWorker : BackgroundService
 {
     private readonly IServiceScopeFactory _scopes;
@@ -53,19 +57,41 @@ public class MaintenanceWorker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stop)
     {
         try { await Task.Delay(TimeSpan.FromMinutes(1), stop); } catch (OperationCanceledException) { return; }
+        var lastMaintenance = DateTime.MinValue;
         while (!stop.IsCancellationRequested)
         {
             try
             {
                 using var scope = _scopes.CreateScope();
-                var (purged, backedUp) = await scope.ServiceProvider.GetRequiredService<MaintenanceService>().RunAsync();
-                if (purged > 0 || backedUp > 0) _log.LogInformation("Maintenance: {Purged} account(s) wiped, {Backups} automatic backup(s) taken", purged, backedUp);
+                var sp = scope.ServiceProvider;
+
+                var db = sp.GetRequiredService<AppDbContext>();
+                var sim = sp.GetRequiredService<SimulationService>();
+                if (sim.Enabled)
+                {
+                    var ids = await db.Users
+                        .Where(u => u.DeletedAt == null && db.Devices.Any(d => d.UserId == u.Id && d.IsSimulated))
+                        .Select(u => u.Id).ToListAsync(stop);
+                    foreach (var id in ids)
+                    {
+                        try { await sim.TickAsync(id); }
+                        catch (Exception ex) { _log.LogWarning(ex, "Simulation tick failed for user {UserId}", id); }
+                    }
+                }
+
+                if (DateTime.UtcNow - lastMaintenance >= TimeSpan.FromHours(1))
+                {
+                    lastMaintenance = DateTime.UtcNow;
+                    var (purged, backedUp) = await sp.GetRequiredService<MaintenanceService>().RunAsync();
+                    if (purged > 0 || backedUp > 0) _log.LogInformation("Maintenance: {Purged} account(s) wiped, {Backups} automatic backup(s) taken", purged, backedUp);
+                }
             }
+            catch (OperationCanceledException) { return; }
             catch (Exception ex)
             {
-                _log.LogWarning(ex, "Maintenance run failed");
+                _log.LogWarning(ex, "Background run failed");
             }
-            try { await Task.Delay(TimeSpan.FromHours(1), stop); } catch (OperationCanceledException) { return; }
+            try { await Task.Delay(TimeSpan.FromMinutes(5), stop); } catch (OperationCanceledException) { return; }
         }
     }
 }
