@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "678948722745",
+    "project_id": "smart-energy-77a8a",
+    "storage_bucket": "smart-energy-77a8a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:678948722745:android:5ffcceefce0a9d0c1ad5e8",
+        "android_client_info": {
+          "package_name": "com.example.smart_plug_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7jo6oxBD2iKJ5bIpmyei4bRjVj0sYWvU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
