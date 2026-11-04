@@ -6,6 +6,7 @@ import '../core/theme.dart';
 import '../widgets/common.dart';
 import 'device_detail.dart';
 import 'tariff.dart';
+import '../core/push.dart';
 
 class AlertsScreen extends StatefulWidget {
   const AlertsScreen({super.key});
@@ -103,6 +104,21 @@ class _AlertsScreenState extends State<AlertsScreen> {
     return tf('{n} days ago', {'n': d.inDays});
   }
 
+  /// Sends a test notification to this phone (to check that phone notifications work).
+  Future<void> _testPush() async {
+    if (!Push.ready) {
+      toast(context, 'Phone notifications are not enabled in this build', error: true);
+      return;
+    }
+    try {
+      await Push.registerForUser();
+      await Api.i.testPush();
+      if (mounted) toast(context, 'Test sent. Check your notification bar.');
+    } on ApiException catch (e) {
+      if (mounted) toast(context, e.message, error: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final items = _items;
@@ -111,7 +127,11 @@ class _AlertsScreenState extends State<AlertsScreen> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            TopNav('Alerts', trailing: IconBtn(Icons.done_all_rounded, _unread > 0 ? _readAll : null, size: 18)),
+            TopNav('Alerts', trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+              IconBtn(Icons.notifications_active_outlined, _testPush, size: 18),
+              const SizedBox(width: 8),
+              IconBtn(Icons.done_all_rounded, _unread > 0 ? _readAll : null, size: 18),
+            ])),
             FilterTabs(_tabs, _t, (i) { setState(() { _t = i; _items = null; }); _load(); }),
             Expanded(
               child: _error != null && items == null
