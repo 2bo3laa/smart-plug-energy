@@ -423,4 +423,12 @@ const Map<String, String> kAr = {
   'This backup version is not supported': 'إصدار النسخة دي مش مدعوم',
   'The backup has too many devices': 'النسخة فيها أجهزة كتير أوي',
   'The backup has too many schedules': 'النسخة فيها جداول كتير أوي',
+  'Signed in with Google? Confirm with a code sent to your email instead of the password.': 'داخل بحساب Google؟ أكّد بكود يوصلك على الإيميل بدل كلمة السر.',
+  'Send code to my email': 'ابعتلي الكود على الإيميل',
+  'Send the code again': 'ابعت الكود تاني',
+  'Confirmation code': 'كود التأكيد',
+  '6 digits': '6 أرقام',
+  'Code sent to your email': 'الكود اتبعت على إيميلك',
+  'Enter your email and password, or the code': 'اكتب الإيميل وكلمة السر، أو الكود',
+  'Please wait a minute before asking for another code': 'استنى دقيقة قبل ما تطلب كود تاني',
 };

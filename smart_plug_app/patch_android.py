@@ -31,6 +31,35 @@ for path in ["android/app/build.gradle.kts", "android/app/build.gradle"]:
             open(path, "w", encoding="utf-8").write(n)
             print("minSdk raised to 23 in", path)
 
+# ---------------------------------------------------------------- alert notification channel (sound + pop-up)
+# Alerts are sent to the channel "smart_plug_alerts". It is created here with HIGH importance so the phone plays a
+# sound and shows a heads-up banner (the default channel is often silent, e.g. on MIUI).
+import glob
+kt = glob.glob("android/app/src/main/kotlin/**/MainActivity.kt", recursive=True)
+if kt:
+    t = open(kt[0], encoding="utf-8").read()
+    if "smart_plug_alerts" not in t:
+        cls = """class MainActivity : FlutterActivity() {
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val channel = android.app.NotificationChannel("smart_plug_alerts", "Alerts", android.app.NotificationManager.IMPORTANCE_HIGH)
+            channel.description = "Power, tariff and device alerts"
+            channel.enableVibration(true)
+            (getSystemService(android.content.Context.NOTIFICATION_SERVICE) as android.app.NotificationManager).createNotificationChannel(channel)
+        }
+    }
+}
+"""
+        n = re.sub(r"class MainActivity\s*:\s*FlutterActivity\(\)\s*(\{\s*\})?", lambda m: cls, t, count=1)
+        if n != t:
+            open(kt[0], "w", encoding="utf-8").write(n)
+            print("Notification channel added to", kt[0])
+        else:
+            print("WARNING: could not add the notification channel (unexpected MainActivity.kt)")
+else:
+    print("WARNING: MainActivity.kt not found: alerts use the default notification channel")
+
 # ---------------------------------------------------------------- firebase (optional)
 src_json = "android_config/google-services.json"
 if not os.path.exists(src_json):

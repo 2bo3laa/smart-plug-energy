@@ -154,8 +154,12 @@ class Api {
 
   // ---- delete account (30-day restore window) ----
   /// Schedules the deletion and signs out on this phone. Throws if the e-mail or password is wrong.
-  Future<DateTime?> deleteAccount(String email, String password) async {
-    final d = await _send('POST', '/auth/delete-account', {'email': email, 'password': password});
+  /// E-mails a one-time code to the account address (used instead of the password, e.g. for Google accounts).
+  Future<void> sendDeleteCode(String lang) => _send('POST', '/auth/delete-account/send-code', {'lang': lang});
+
+  Future<DateTime?> deleteAccount({String? email, String? password, String? code}) async {
+    final d = await _send('POST', '/auth/delete-account',
+        code != null ? {'code': code} : {'email': email, 'password': password});
     await logout();
     return d is Map && d['purgeAt'] != null ? DateTime.tryParse(d['purgeAt'].toString())?.toLocal() : null;
   }

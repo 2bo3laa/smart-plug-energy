@@ -72,33 +72,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (pick != null) await Lang.i.set(pick, fromSettings: true);
   }
 
-  Future<void> _server() async {
-    final c = TextEditingController(text: Api.i.baseUrl);
-    final v = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: C.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Server Address', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Emulator: http://10.0.2.2:4000\nReal phone: http://<your-PC-IP>:4000', style: TextStyle(fontSize: 12, color: C.text2, height: 1.5)),
-          const SizedBox(height: 14),
-          Field(label: 'Base URL', hint: 'http://192.168.1.10:4000', controller: c, keyboard: TextInputType.url),
-        ]),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: C.text2))),
-          TextButton(onPressed: () => Navigator.pop(ctx, c.text.trim()), child: const Text('Save')),
-        ],
-      ),
-    );
-    if (v == null || v.isEmpty) return;
-    await Api.i.setBaseUrl(v);
-    if (mounted) {
-      toast(context, tf('Server set to {url}', {'url': Api.i.baseUrl}));
-      _load();
-    }
-  }
-
   void _help() => showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -111,7 +84,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               '',
               tr('• Tap the power button to switch an appliance on/off.'),
               tr('• Set a power threshold in Device Detail to get alerts.'),
-              tr('• If the app cannot connect, check Settings › Server Address.'),
               '',
               tr('Educational prototype — not a replacement for the certified utility meter.'),
             ].join('\n'),
@@ -167,7 +139,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _item(Icons.backup_outlined, C.purple, 'Backups', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BackupsScreen()))),
         _item(Icons.receipt_long_outlined, C.green, 'Electricity Tariff', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TariffScreen()))),
         _item(Icons.language_rounded, C.purple, 'Language', value: Lang.i.isAr ? 'العربية' : 'English', onTap: _pickLanguage),
-        _item(Icons.dns_outlined, C.blue, 'Server Address', onTap: _server),
         _item(Icons.help_outline_rounded, C.text2, 'Help & Support', onTap: _help, last: true),
         const SizedBox(height: 14),
         GestureDetector(

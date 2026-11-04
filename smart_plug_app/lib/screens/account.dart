@@ -139,40 +139,78 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _deleteAccount() async {
     final email = TextEditingController();
     final pass = TextEditingController();
+    final code = TextEditingController();
+    final hasGoogle = _googleEmail != null && _googleEmail!.isNotEmpty;
+    var sent = false, sending = false;
     final ok = await showDialog<bool>(
       context: context,
-      builder: (c) => AlertDialog(
-        backgroundColor: C.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete your account?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
-        content: SingleChildScrollView(
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text(
-              'Your account will be closed now and all its data (devices, readings, schedules, backups) is deleted permanently after 30 days. Sign in again within 30 days to restore it.',
-              style: TextStyle(color: C.text2, fontSize: 12.5, height: 1.5),
-            ),
-            const SizedBox(height: 16),
-            Field(label: 'Email', hint: 'Enter Email', controller: email, keyboard: TextInputType.emailAddress),
-            Field(label: 'Password', hint: 'Enter Password', controller: pass, obscure: true),
-          ]),
+      builder: (c) => StatefulBuilder(
+        builder: (c, setD) => AlertDialog(
+          backgroundColor: C.card,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Delete your account?', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+          content: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text(
+                'Your account will be closed now and all its data (devices, readings, schedules, backups) is deleted permanently after 30 days. Sign in again within 30 days to restore it.',
+                style: TextStyle(color: C.text2, fontSize: 12.5, height: 1.5),
+              ),
+              const SizedBox(height: 16),
+              Field(label: 'Email', hint: 'Enter Email', controller: email, keyboard: TextInputType.emailAddress),
+              Field(label: 'Password', hint: 'Enter Password', controller: pass, obscure: true),
+              if (hasGoogle) ...[
+                const Text('Signed in with Google? Confirm with a code sent to your email instead of the password.',
+                    style: TextStyle(color: C.text2, fontSize: 12, height: 1.5)),
+                if (sent) ...[
+                  const SizedBox(height: 10),
+                  Field(label: 'Confirmation code', hint: '6 digits', controller: code, keyboard: TextInputType.number),
+                ],
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton.icon(
+                    onPressed: sending
+                        ? null
+                        : () async {
+                            setD(() => sending = true);
+                            try {
+                              await Api.i.sendDeleteCode(Lang.i.isAr ? 'ar' : 'en');
+                              setD(() => sent = true);
+                              if (c.mounted) toast(c, 'Code sent to your email');
+                            } on ApiException catch (ex) {
+                              if (c.mounted) toast(c, ex.message, error: true);
+                            } finally {
+                              setD(() => sending = false);
+                            }
+                          },
+                    icon: const Icon(Icons.mail_outline_rounded, size: 18),
+                    label: Text(sent ? 'Send the code again' : 'Send code to my email'),
+                  ),
+                ),
+              ],
+            ]),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel', style: TextStyle(color: C.text2))),
+            TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete Account', style: TextStyle(color: C.red))),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel', style: TextStyle(color: C.text2))),
-          TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete Account', style: TextStyle(color: C.red))),
-        ],
       ),
     );
-    final e = email.text.trim(), p = pass.text;
+    final e = email.text.trim(), p = pass.text, cd = code.text.trim();
     email.dispose();
     pass.dispose();
+    code.dispose();
     if (ok != true) return;
-    if (e.isEmpty || p.isEmpty) {
-      toast(context, 'Enter your email and password', error: true);
+    final useCode = cd.isNotEmpty;
+    if (!useCode && (e.isEmpty || p.isEmpty)) {
+      toast(context, hasGoogle ? 'Enter your email and password, or the code' : 'Enter your email and password', error: true);
       return;
     }
     setState(() => _deleting = true);
     try {
-      final purge = await Api.i.deleteAccount(e, p);
+      final purge = useCode
+          ? await Api.i.deleteAccount(code: cd)
+          : await Api.i.deleteAccount(email: e, password: p);
       if (!mounted) return;
       await showDialog<void>(
         context: context,
